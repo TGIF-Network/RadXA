@@ -16,6 +16,9 @@ m5=$(sed -nr "/^\[System Fusion\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; 
 m7=$(sed -nr "/^\[NXDN\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 m9=$(sed -nr "/^\[P25\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+#printf "I ${RED}love${NC} Stack Overflow\n"
 
 DStar=0
 DMR=0
@@ -23,6 +26,20 @@ YSF=0
 NXDN=0
 P25=0
 
+
+function exitcode
+{
+txt='Abort Function\n\n
+This Script will Now Stop'"\n$exittext"
+
+dialog --title "  Programmed Exit  " --ascii-lines --msgbox "$txt" 8 78
+
+clear
+echo -e '\e[1;40m'
+run="Done"
+exit
+
+}
 
 
 #echo "$m1 $m2 $m3 $m4 $m5"
@@ -73,9 +90,9 @@ fi
 
 
 declare -a choices=( $(dialog \
-		--ascii-lines \
                 --backtitle "  Operational Mode Selector  " \
                 --title "  Main Modes  " \
+		--ascii-lines \
                 --checklist " Choose Modes to Enable:" 30 30 12 \
                 1 "DStar On" "$m1" \
                 2 "DMR On" "$m3" \
@@ -83,6 +100,12 @@ declare -a choices=( $(dialog \
                 4 "NXDN On" "$m7" \
                 5 "P25 On" "$m9" 2>&1 >/dev/tty) )
 CS=0
+
+if [ -z "$choices" ]; then
+exittext="Cancel Selected"
+exitcode
+fi
+
 for sel in "${choices[@]}"; do
     case "$sel" in
         1) DStar="1"
@@ -108,49 +131,53 @@ for sel in "${choices[@]}"; do
     esac
 done
 
+#printf "I ${RED}love${NC} Stack Overflow\n"
+
 if [ "$CS" == "1" ]; then
 clear
 if [ "$DStar" == "1" ]; then
-       echo "DStar Mode selected ON"
+       SStar1="\Z1DStar Mode selected ON"
 		sudo sed -i '/^\[/h;G;/D-Star/s/\(Enable=\).*/\11/m;P;d'  /etc/mmdvmhost	
 else
-       echo "DStar Mode selected OFF"
+       DStar1="\Z0DStar Mode selected OFF"
 		sudo sed -i '/^\[/h;G;/D-Star/s/\(Enable=\).*/\10/m;P;d'  /etc/mmdvmhost	
 fi
 
 if [ "$DMR" == "1" ]; then
-	echo "DMR Mode selected ON"
+	DMR1="\Z1DMR   Mode selected ON"
 		sudo sed -i '/^\[/h;G;/DMR/s/\(Enable=\).*/\11/m;P;d'  /etc/mmdvmhost
 else
-	echo "DMR Mode selected OFF"
+	DMR1="\Z0DMR   Mode selected OFF"
 		sudo sed -i '/^\[/h;G;/DMR/s/\(Enable=\).*/\10/m;P;d'  /etc/mmdvmhost
 
 fi
 
 if [ "$YSF" == "1" ]; then
-	echo "YSF Mode selected ON"
+	YSF1="\Z1YSF   Mode selected ON"
 		sudo sed -i '/^\[/h;G;/System Fusion/s/\(Enable=\).*/\11/m;P;d'  /etc/mmdvmhost
 else
-    	echo "YSF Mode selected OFF"
+    	YSF1="\Z0YSF   Mode selected OFF"
 		sudo sed -i '/^\[/h;G;/System Fusion/s/\(Enable=\).*/\10/m;P;d'  /etc/mmdvmhost
 fi
 
 if [ "$NXDN" == "1" ]; then
-	echo "NXDN Mode selected ON"
+	NXDN1="\Z1NXDN  Mode selected ON"
 		sudo sed -i '/^\[/h;G;/NXDN/s/\(Enable=\).*/\11/m;P;d'  /etc/mmdvmhost
 else
-	echo "NXDN Mode selected OFF"
+	NXDN1="\Z0NXDN  Mode selected OFF"
 		sudo sed -i '/^\[/h;G;/NXDN/s/\(Enable=\).*/\10/m;P;d'  /etc/mmdvmhost
 fi
 
 if [ "$P25" == "1" ]; then
-	echo "P25 Mode selected ON"
+	P251="\Z1P25   Mode selected ON"
 		sudo sed -i '/^\[/h;G;/P25/s/\(Enable=\).*/\11/m;P;d'  /etc/mmdvmhost
 else
-	echo "P25 Mode selected OFF"
+	P251="\ZOP25   Mode selected OFF"
 		sudo sed -i '/^\[/h;G;/P25/s/\(Enable=\).*/\10/m;P;d'  /etc/mmdvmhost
 fi
 
+dialog --title " Mode Selections" --colors --ascii-lines --infobox "\n$DStar1\n\n$DMR1\n\n$YSF1\n\n$NXDN1\n\n$P251\n" 13 30
+mmdvmhost.service restart
 fi
 
 
