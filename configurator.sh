@@ -657,6 +657,11 @@ MenuMain
 
 function MenuMaint()
 {
+if [ ! -d /etc/backups ]; then
+  mkdir /etc/backups
+fi
+
+
 HEIGHT=25
 WIDTH=40
 CHOICE_HEIGHT=15
