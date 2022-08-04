@@ -759,11 +759,11 @@ echo "Choice = $MAINT"
 if [ "$MAINT" -eq 1 ]; then
         echo "You chose Option 1 - Bacup Config Files"
 		dates=$(date +%F)
-                cp /etc/mmdvmhost /etc/backups/mmdvmhost"$dates"
-                cp /etc/ysfgateway /etc/backups/ysfgateway"$dates"
-                cp /etc/nxdngateway /etc/backups/nxdngateway"$dates"
-                cp /etc/p25gateway /etc/backups/p25gateway"$dates"
-                cp /etc/dmrgateway /etc/backups/dmrgateway"$dates"
+                cp /etc/mmdvmhost /etc/backups/mmdvmhost"-$dates"
+                cp /etc/ysfgateway /etc/backups/ysfgateway"-$dates"
+                cp /etc/nxdngateway /etc/backups/nxdngateway"-$dates"
+                cp /etc/p25gateway /etc/backups/p25gateway"-$dates"
+                cp /etc/dmrgateway /etc/backups/dmrgateway"-$dates"
         	dialog --ascii-lines --infobox "Backups Complete - Reloading Menu" 5 40 ; sleep 2
 		MenuMaint
 fi
@@ -782,12 +782,14 @@ if [ "$MAINT" -eq 2 ]; then
 	echo "Exit Code = $exitcode"
 	echo "File = $F1"
         if [ ! -z "$F1" ]; then
-          	echo "File to Backup = $F1"
+ 		bf=$(echo "$F1" | cut -d "-" -f 1 )
+		fn=$(echo "$bf" | cut -d "/" -f 4 )	
+           	echo "File to Backup = $bf"
 			dest='/etc/'
-	            	cp $F1 $dest
-		err=$?
+	            	cp $bf $dest
+			err=$?
 		if [ $err -eq 0 ]; then
-			dialog --ascii-lines --infobox "Config File Restored to /etc/\n$F1" 5 40 ; sleep 2
+			dialog --ascii-lines --infobox "Backup Config File $F1\nRestored to $dest$fn" 5 60 ; sleep 5
 		else
 			dialog --ascii-lines --infobox "Restore Operation Failed" 5 40 ; sleep 2
 		
