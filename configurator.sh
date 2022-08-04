@@ -209,7 +209,6 @@ if [ -z "$Callsign" ]; then
 fi
 
 
-
 Id=$(echo "$Gen" | sed -n '2p' )
 Timeout=$(echo "$Gen"  | sed -n '3p' )
 Duplex=$(echo "$Gen"  | sed -n '4p' )
@@ -251,12 +250,69 @@ MenuMain
 }
 
 
+
+
+
 function EditModem(){
 #4
+
+mm1=$(sed -nr "/^\[Modem\]/ { :l /^Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm2=$(sed -nr "/^\[Modem\]/ { :l /^TXDelay[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm3=$(sed -nr "/^\[Modem\]/ { :l /^RXOffset[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm4=$(sed -nr "/^\[Modem\]/ { :l /^TXOffset[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm5=$(sed -nr "/^\[Modem\]/ { :l /^DMRDelay[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm6=$(sed -nr "/^\[Modem\]/ { :l /^RXLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm7=$(sed -nr "/^\[Modem\]/ { :l /^TXLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm8=$(sed -nr "/^\[Modem\]/ { :l /RFLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm9=$(sed -nr "/^\[Modem\]/ { :l /DMRTXLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm10=$(sed -nr "/^\[Modem\]/ { :l /YSFTXLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm11=$(sed -nr "/^\[Modem\]/ { :l /P25TXLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm12=$(sed -nr "/^\[Modem\]/ { :l /NXDNTXLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm13=$(sed -nr "/^\[Modem\]/ { :l /Trace[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm14=$(sed -nr "/^\[Modem\]/ { :l /^UARTPort[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm15=$(sed -nr "/^\[Modem\]/ { :l /UARTSpeed[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+exec 3>&1
+
+Modems=$(dialog  --ascii-lines \
+        --backtitle "MMDVM Host Configurator - VE3RD" \
+        --separate-widget  $'\n'   \
+        --ok-label "Save" \
+        --title "Modem Section" \
+        --mixedform "\n Modem Configuration Items (Editable)" 20 70 12\
+        "Port"        1 1 "$mm1"               1 25 35 0 0 \
+        "TXDelay"     2 1 "$mm2"               2 25 35 0 0 \
+        "RXOffset"    3 1 "$mm3"               3 25 35 0 0 \
+        "TXOffset"    4 1 "$mm4"               4 25 35 0 0 \
+        "DMRDelay"    5 1 "$mm5"       	      5 25 35 0 0 \
+        "RXLevel"     6 1 "$mm6"               6 25 35 0 0 \
+        "TXLevel"     7 1 "$mm7"               7 25 35 0 0 \
+        "RFLevel"     8 1 "$mm8"               8 25 35 0 0 \
+        "DMRTXLevel"  9 1 "$mm9"               9 25 35 0 0 \
+        "YSFTXLevel"  10 1 "$mm10"              10 25 35 0 0 \
+        "P25TXLevel"  11 1 "$mm11"              11 25 35 0 0 \
+        "NXDNTXLevel" 12 1 "$mm12"              12 25 35 0 0 \
+        "Trace"       13 1 "$mm13"              13 25 35 0 0 \
+        "UARTPort"    14 1 "$mm14"              14 25 35 0 0 \
+        "UARTSpeed"   15 1 "$mm15"              15 25 35 0 0 \
+ 	2>&1 1>&3)
+
+returncode=$?
+
+#echo "$Gen"
+Port=$(echo "$Modems" | sed -n '1p')
+echo "Return Code = $returncode"
+
+
+if [  $returncode -eq 1 ]; then 
+   echo "Abort 1 Cancel " 
+	dialog --ascii-lines --infobox "Cancel Selected - Function Aborted\nSleeping 2 seconds" 10 40 ; sleep 2
+ 	MenuMain
+fi
+
 dialog \
         --backtitle "MMDVM Host Configurator - VE3RD" \
 	--title " Edit Modem Parameters "  \
-	--ascii-lines --msgbox " This function not yet impemented" 13 50
+	--ascii-lines --msgbox "This function uder development\nData Write Not Yet Implemented" 13 50 ; sleep 2
 
 result=$?
 echo "$result"
