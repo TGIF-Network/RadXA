@@ -42,42 +42,104 @@ tput setab 9 mode="" clear echo -e '\e[1;40m' run="Done" exit
 
 }
 
-function CheckMode(){
+function CheckSetModes(){
 md1=$(sed -nr "/^\[D-Star\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-md2=$(sed -nr "/^\[P25\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+md2=$(sed -nr "/^\[DMR\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 md3=$(sed -nr "/^\[System Fusion\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 md4=$(sed -nr "/^\[NXDN\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 md5=$(sed -nr "/^\[P25\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-tm1="OFF"
-tm2="OFF"
-tm3="OFF"
-tm4="OFF"
-tm5="OFF"
 
-if [ "$md1" == "1" ]; then
-	tmode="D-Star"
-	tm1="ON"
-	return
-elif [ "$md2" == "1" ]; then
-        tmode="P25"
-	tm2="ON"
-        return
-elif [ "$md3" == "1" ]; then
-        tmode="D-Star"
-	tm3="ON"
-        return
-elif [ "$md3" == "1" ]; then
-        tmode="D-Star"
-	tm4="ON"
-        return
-elif [ "$md3" == "1" ]; then
-        tmode="D-Star"
-	tm5="ON"
-        return
-else
-	tmode="P25"
-	tm2="ON"
+dm1=$(sed -nr "/^\[DMR Network 1\]/ { :l /Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm2=$(sed -nr "/^\[DMR Network 2\]/ { :l /Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm3=$(sed -nr "/^\[DMR Network 3\]/ { :l /Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm4=$(sed -nr "/^\[DMR Network 4\]/ { :l /Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm5=$(sed -nr "/^\[DMR Network 5\]/ { :l /Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm6=$(sed -nr "/^\[DMR Network 6\]/ { :l /Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+echo "DMR Net4 Enabled = $dm4"
+
+ opmodes=$(dialog \
+        --title "Modes and Enables Screen" \
+        --ok-label "Submit" \
+        --backtitle "MMDVM Host Configurator - VE3RD" \
+	--stdout \
+        --ascii-lines \
+        --mixedform "Modes Enable and DMRGateay Enables (Editable)" 25 60 20 \
+        "Op Modes"    	1 1 "Op Modes"  	1 15 35 0 2 \
+        "D-Star"       	2 1 "$md1"     		2 15 35 0 0 \
+        "DMR"          	3 1 "$md2"     		3 15 35 0 0 \
+        "YSF"       	4 1 "$md3"     		4 15 35 0 0 \
+        "NXDN"      	5 1 "$md4"     		5 15 35 0 0 \
+        "P25"          	6 1 "$md5"     		6 15 35 0 0 \
+        "DMRGateway"    7 1 "DMRGateway"     	7 15 35 0 2 \
+        "Net 1"    	8 1 "$dm1"     		8 15 35 0 0 \
+        "Net 2"    	9 1 "$dm2"     		9 15 35 0 0 \
+        "Net 3"   	10 1 "$dm3"    		10 15 35 0 0 \
+        "Net 4"     	11 1 "$dm4"   		11 15 35 0 0 \
+        "Net 5"         12 1 "$dm5"   		12 15 35 0 0 \
+        "Net 6"      	13 1 "$dm6"    		13 15 35 0 0) 
+
+errorcode=$?
+echo "$errorcode"
+echo "$opmodes"
+
+if [ $errorcode -eq 1 ]; then
+echo "Cancelled"
+	MenuMain
 fi
+
+DStar=$(echo "$opmodes" | sed -n '2p' )
+DMR=$(echo "$opmodes" | sed -n '3p' )
+YSF=$(echo "$opmodes" | sed -n '4p' )
+NXDN=$(echo "$opmodes" | sed -n '5p' )
+P25=$(echo "$opmodes" | sed -n '6p' )
+
+Net1=$(echo "$opmodes" | sed -n '8p' )
+Net2=$(echo "$opmodes" | sed -n '9p' )
+Net3=$(echo "$opmodes" | sed -n '10p' )
+Net4=$(echo "$opmodes" | sed -n '11p' )
+Net5=$(echo "$opmodes" | sed -n '12p' )
+Net6=$(echo "$opmodes" | sed -n '13p' )
+
+
+
+echo "Net3 - $Net3"
+if [ "$DStar" != "$md1" ]; then 
+        sudo sed -i '/^\[/h;G;/D-Star]/s/\(Enable=\).*/\1'"$DStar"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$DMR" != "$md2" ]; then 
+        sudo sed -i '/^\[/h;G;/DMR]/s/\(Enable=\).*/\1'"$DMR"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$YSF" != "$md3" ]; then 
+        sudo sed -i '/^\[/h;G;/System Fusion]/s/\(Enable=\).*/\1'"$YSF"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$NXDN" != "$md4" ]; then 
+        sudo sed -i '/^\[/h;G;/NXDM]/s/\(Enable=\).*/\1'"$NXDN"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$P25" != "$md5" ]; then 
+        sudo sed -i '/^\[/h;G;/P25]/s/\(Enable=\).*/\1'"$P25"'/m;P;d' /etc/mmdvmhost
+fi
+
+
+if [ "$Net1" != "$dm1" ]; then 
+        sudo sed -i '/^\[/h;G;/DMR Network 1]/s/\(Enabled=\).*/\1'"$Net1"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Net2" != "$dm2" ]; then 
+        sudo sed -i '/^\[/h;G;/DMR Network 2]/s/\(Enabled=\).*/\1'"$Net2"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Net3" != "$dm3" ]; then 
+        sudo sed -i '/^\[/h;G;/DMR Network 3]/s/\(Enabled=\).*/\1'"$Net3"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Net4" != "$dm4" ]; then 
+        sudo sed -i '/^\[/h;G;/DMR Network 4]/s/\(Enabled=\).*/\1'"$Net4"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Net5" != "$dm5" ]; then 
+        sudo sed -i '/^\[/h;G;/DMR Network 5]/s/\(Enabled=\).*/\1'"$Net5"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Net6" != "$dm6" ]; then 
+        sudo sed -i '/^\[/h;G;/DMR Network 6]/s/\(Enabled=\).*/\1'"$Net6"'/m;P;d' /etc/dmrgateway
+fi
+
+MenuMain
 }
 
 function CheckDisplay(){
@@ -384,9 +446,7 @@ if [ "$FileLevel" != "$l2" ]; then
         sudo sed -i '/^\[/h;G;/Log]/s/\(FileLevel=\).*/\1'"$FileLevel"'/m;P;d' /etc/mmdvmhost
 fi
 if [ "$FilePath" != "$l3" ]; then 
- # FROM=$(echo "$d8" | sed "s/\//\\\\\//g")
   TO=$(echo "$FilePath" | sed "s/\//\\\\\//g")
-#  sed -i "/^\[Log\]/,/^$/s/^FilePath=$FROM/FilePath=$TO/" /etc/p25gateway
         sudo sed -i '/^\[/h;G;/Log]/s/\(FilePath=\).*/\1'"$TO"'/m;P;d' /etc/mmdvmhost
 fi
 if [ "$FileRotate" != "$l5" ]; then 
@@ -501,14 +561,14 @@ mm4=$(sed -nr "/^\[Modem\]/ { :l /^TXOffset[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;
 mm5=$(sed -nr "/^\[Modem\]/ { :l /^DMRDelay[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 mm6=$(sed -nr "/^\[Modem\]/ { :l /^RXLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 mm7=$(sed -nr "/^\[Modem\]/ { :l /^TXLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-mm8=$(sed -nr "/^\[Modem\]/ { :l /RFLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-mm9=$(sed -nr "/^\[Modem\]/ { :l /DMRTXLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-mm10=$(sed -nr "/^\[Modem\]/ { :l /YSFTXLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-mm11=$(sed -nr "/^\[Modem\]/ { :l /P25TXLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-mm12=$(sed -nr "/^\[Modem\]/ { :l /NXDNTXLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-mm13=$(sed -nr "/^\[Modem\]/ { :l /Trace[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm8=$(sed -nr "/^\[Modem\]/ { :l /^RFLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm9=$(sed -nr "/^\[Modem\]/ { :l /^DMRTXLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm10=$(sed -nr "/^\[Modem\]/ { :l /^YSFTXLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm11=$(sed -nr "/^\[Modem\]/ { :l /^P25TXLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm12=$(sed -nr "/^\[Modem\]/ { :l /^NXDNTXLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm13=$(sed -nr "/^\[Modem\]/ { :l /^Trace[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 mm14=$(sed -nr "/^\[Modem\]/ { :l /^UARTPort[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-mm15=$(sed -nr "/^\[Modem\]/ { :l /UARTSpeed[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm15=$(sed -nr "/^\[Modem\]/ { :l /^UARTSpeed[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 exec 3>&1
 
 Modems=$(dialog  --ascii-lines \
@@ -516,22 +576,22 @@ Modems=$(dialog  --ascii-lines \
         --separate-widget  $'\n'   \
         --ok-label "Save" \
         --title "Modem Section" \
-        --mixedform "\n Modem Configuration Items (Editable)" 20 70 12\
-        "Port"        1 1 "$mm1"               1 25 35 0 0 \
-        "TXDelay"     2 1 "$mm2"               2 25 35 0 0 \
-        "RXOffset"    3 1 "$mm3"               3 25 35 0 0 \
-        "TXOffset"    4 1 "$mm4"               4 25 35 0 0 \
-        "DMRDelay"    5 1 "$mm5"       	      5 25 35 0 0 \
-        "RXLevel"     6 1 "$mm6"               6 25 35 0 0 \
-        "TXLevel"     7 1 "$mm7"               7 25 35 0 0 \
-        "RFLevel"     8 1 "$mm8"               8 25 35 0 0 \
-        "DMRTXLevel"  9 1 "$mm9"               9 25 35 0 0 \
-        "YSFTXLevel"  10 1 "$mm10"              10 25 35 0 0 \
-        "P25TXLevel"  11 1 "$mm11"              11 25 35 0 0 \
-        "NXDNTXLevel" 12 1 "$mm12"              12 25 35 0 0 \
-        "Trace"       13 1 "$mm13"              13 25 35 0 0 \
-        "UARTPort"    14 1 "$mm14"              14 25 35 0 0 \
-        "UARTSpeed"   15 1 "$mm15"              15 25 35 0 0 \
+        --mixedform "\n Modem Configuration Items (Editable)" 30 40 0 \
+        "Port"        1 1 "$mm1"               1 15 35 0 0 \
+        "TXDelay"     2 1 "$mm2"               2 15 35 0 0 \
+        "RXOffset"    3 1 "$mm3"               3 15 35 0 0 \
+        "TXOffset"    4 1 "$mm4"               4 15 35 0 0 \
+        "DMRDelay"    5 1 "$mm5"       	       5 15 35 0 0 \
+        "RXLevel"     6 1 "$mm6"               6 15 35 0 0 \
+        "TXLevel"     7 1 "$mm7"               7 15 35 0 0 \
+        "RFLevel"     8 1 "$mm8"               8 15 35 0 0 \
+        "DMRTXLevel"  9 1 "$mm9"               9 15 35 0 0 \
+        "YSFTXLevel"  10 1 "$mm10"              10 15 35 0 0 \
+        "P25TXLevel"  11 1 "$mm11"              11 15 35 0 0 \
+        "NXDNTXLevel" 12 1 "$mm12"              12 15 35 0 0 \
+        "Trace"       13 1 "$mm13"              13 15 35 0 0 \
+        "UARTPort"    14 1 "$mm14"              14 15 35 0 0 \
+        "UARTSpeed"   15 1 "$mm15"              15 15 35 0 0 \
  	2>&1 1>&3)
 
 returncode=$?
@@ -547,13 +607,69 @@ if [  $returncode -eq 1 ]; then
  	MenuMain
 fi
 
-dialog \
-        --backtitle "MMDVM Host Configurator - VE3RD" \
-	--title " Edit Modem Parameters "  \
-	--ascii-lines --msgbox "This function uder development\nData Write Not Yet Implemented" 13 50 ; sleep 2
+Port=$(echo "$Modems" | sed -n '1p' )
+TXDelay=$(echo "$Modems" | sed -n '2p' )
+RXOffset=$(echo "$Modems" | sed -n '3p' )
+TXOffset=$(echo "$Modems" | sed -n '4p' )
+DMRDelay=$(echo "$Modems" | sed -n '5p' )
+RXLevel=$(echo "$Modems" | sed -n '6p' )
+TXLevel=$(echo "$Modems" | sed -n '7p' )
+RFLevel=$(echo "$Modems" | sed -n '8p' )
+DMRTXLevel=$(echo "$Modems" | sed -n '9p' )
+YSFTXLevel=$(echo "$Modems" | sed -n '10p' )
+P25TXLevel=$(echo "$Modems" | sed -n '11p' )
+NXDNTXLevel=$(echo "$Modems" | sed -n '12p' )
+Trace=$(echo "$Modems" | sed -n '13p' )
+UARTPort=$(echo "$Modems" | sed -n '14p' )
+UARTSpeed=$(echo "$Modems" | sed -n '15p' )
 
-result=$?
-echo "$result"
+if [ "$Port" != "$mm1" ]; then
+        sudo sed -i '/^\[/h;G;/Modem]/s/\(Port=\).*/\1'"$Port"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$TXDelay" != "$mm2" ]; then
+        sudo sed -i '/^\[/h;G;/Modem]/s/\(Port=\).*/\1'"$Port"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$RXOffset" != "$mm3" ]; then
+        sudo sed -i '/^\[/h;G;/Modem]/s/\(RXOffset=\).*/\1'"$RXOffset"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$TXOffset" != "$mm4" ]; then
+        sudo sed -i '/^\[/h;G;/Modem]/s/\(TXOffset=\).*/\1'"$TXOffset"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$DMRDelay" != "$mm5" ]; then
+        sudo sed -i '/^\[/h;G;/Modem]/s/\(DMRDelay=\).*/\1'"$DMRDelay"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$RXLevel" != "$mm6" ]; then
+        sudo sed -i '/^\[/h;G;/Modem]/s/\(RXLevel=\).*/\1'"$RXLevel"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$TXLevel" != "$mm7" ]; then
+        sudo sed -i '/^\[/h;G;/Modem]/s/\(TXLevel=\).*/\1'"$TXLevel"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$RFLevel" != "$mm8" ]; then
+        sudo sed -i '/^\[/h;G;/Modem]/s/\(RFLevel=\).*/\1'"$RFLevel"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$DMRTXLevel" != "$mm9" ]; then
+        sudo sed -i '/^\[/h;G;/Modem]/s/\(DMRTXLevel=\).*/\1'"$DMRTXLevel"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$YSFTXLevel" != "$mm10" ]; then
+        sudo sed -i '/^\[/h;G;/Modem]/s/\(YSFTXLevel=\).*/\1'"$YSFTXLevel"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$P25TXLevel" != "$mm11" ]; then
+        sudo sed -i '/^\[/h;G;/Modem]/s/\(P25TXLevel=\).*/\1'"$P25TXLevel"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$NXDNTXLevel" != "$mm12" ]; then
+        sudo sed -i '/^\[/h;G;/Modem]/s/\(NXDNTXLevel=\).*/\1'"$NXDNTXLevel"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$Trace" != "$mm13" ]; then
+        sudo sed -i '/^\[/h;G;/Modem]/s/\(Trace=\).*/\1'"$Trace"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$UARTPort" != "$mm14" ]; then
+  TO=$(echo "$UARTPort" | sed "s/\//\\\\\//g")
+        sudo sed -i '/^\[/h;G;/Modem]/s/\(UARTPort=\).*/\1'"$TO"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$UARTSpeed" != "$mm15" ]; then
+        sudo sed -i '/^\[/h;G;/Modem]/s/\(UARTSpeed=\).*/\1'"$UARTSpeed"'/m;P;d' /etc/mmdvmhost
+fi
+
 MenuMain
 }
 
@@ -1056,15 +1172,22 @@ if [ "$MAINT" -eq 4 ]; then
 sudo dmrgateway.services restart
 fi
 if [ "$MAINT" -eq 5 ]; then
-echo TBA
+sudo mmdvmhost.service restart
+sudo dmrgateway.service restar
+sudo p25gateway.service restart
+sudo ysfgateway.service restart
+sudo nxdngateway.service restart
 fi
 
 if [ "$MAINT" -eq 6 ]; then
+echo "Rebooting Hotspot - Log back in when it come up"
 sudo reboot
 exit
 
 fi
 if [ "$MAINT" -eq 7 ]; then
+echo "Updating All Host Files"
+echo "Please WAIT a few seconds"
 sudo HostFilesUpdate.sh
 fi
 
@@ -1378,7 +1501,7 @@ MENU="Choose one of the following options\n --NYA Not Yet Available\n --UC Under
 OPTIONS=(1 "Edit General Section" 
          2 "Edit Info Section" 
          3 "Edit Log Section" 
-	 4 "Edit Modem Section - UC" 
+	 4 "Edit Modem Section" 
          5 "Edit DMR Section" 
          6 "Edit P25 Section" 
          7 "Edit NXDN Section - UC" 
@@ -1386,9 +1509,10 @@ OPTIONS=(1 "Edit General Section"
 	 9 "Edit Nextion Sections" 
 	10 "Edit Non Nextion Displays - NYA"
 	11 "Edit Edit Mode Enables" 
-	12 "Edit Mode Hangs" 
+	12 "Edit Mode Hangs - NYA" 
 	13 "Edit DMRGateway" 
 	14 "Maintenance & Backup/Restore" 
+	15 "Check - Set Modes and Enables" 
 	)
 #		--extra-button \
 #		--extra-label "Restart MMDVM" \
@@ -1477,6 +1601,10 @@ case $CHOICE in
         14)
             echo "You chose Option 14"
           	MenuMaint
+	  ;;
+        15)
+            echo "You chose Option 15"
+          	CheckSetModes
 	  ;;
 	
 esac
