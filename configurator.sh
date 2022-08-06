@@ -79,13 +79,15 @@ echo "DMR Net4 Enabled = $dm4"
         "Net 6"      	13 1 "$dm6"    		13 15 35 0 0) 
 
 errorcode=$?
-echo "$errorcode"
-echo "$opmodes"
 
 if [ $errorcode -eq 1 ]; then
-echo "Cancelled"
-	MenuMain
+MenuMain
 fi
+if [ $errorcode -eq 255 ]; then
+MenuMain
+fi
+
+
 
 DStar=$(echo "$opmodes" | sed -n '2p' )
 DMR=$(echo "$opmodes" | sed -n '3p' )
@@ -102,7 +104,6 @@ Net6=$(echo "$opmodes" | sed -n '13p' )
 
 
 
-echo "Net3 - $Net3"
 if [ "$DStar" != "$md1" ]; then 
         sudo sed -i '/^\[/h;G;/D-Star]/s/\(Enable=\).*/\1'"$DStar"'/m;P;d' /etc/mmdvmhost
 fi
@@ -286,13 +287,11 @@ exec 3>&1
 
 
 errorcode=$?
-echo "$errorcode"
 
 
 
 if [ $errorcode -eq 1 ]; then
    dialog --ascii-lines --infobox "Cancel selected - Sleeping 2 seconds" 10 40 ; sleep 2
-        echo "$errorcode"
         EditDMRGate
 fi
 
@@ -376,7 +375,6 @@ exec 3>&1
         "Power"  	22 1 "$g19"     22 15 35 0 0 2>&1 1>&3 )
 
 errorcode=$?
-echo "$errorcode"
 
 if [ $errorcode -eq 1 ]; then
 	MenuMain
@@ -424,7 +422,10 @@ exec 3>&1
 errorcode=$?
 if [ $errorcode -eq 1 ]; then
    dialog --ascii-lines --infobox "Cancel selected - Sleeping 2 seconds" 10 40 ; sleep 2
- 	echo "$errorcode"
+	MenuMain
+fi
+if [ $errorcode -eq 255 ]; then
+   dialog --ascii-lines --infobox "ESC Button Pressed - Sleeping 2 seconds" 10 40 ; sleep 2
 	MenuMain
 fi
 
@@ -489,19 +490,14 @@ Gen=$(dialog  --ascii-lines \
 
 returncode=$?
 
-#echo "$Gen"
 Callsign=$(echo "$Gen" | sed -n '1p')
-echo "$Callsign"
-echo "Return Code = $returncode"
 
 if [  $returncode -nq 0 ]; then 
-   echo "Abort 1 Cancel " 
 	dialog --ascii-lines --infobox "Cancel Selected - Function Aborted\nSleeping 2 seconds" 10 40 ; sleep 2
  	MenuMain
 fi
 
 if [ -z "$Callsign" ]; then 
-	echo "Nodata"
         dialog --ascii-lines --infobox " No Call Sign - Function Aborted\nSleeping 2 seconds" 10 40 ; sleep 2
         MenuMain
 fi
@@ -515,7 +511,6 @@ NetModeHang=$(echo "$Gen"  | sed -n '6p')
 Display=$(echo "$Gen"  | sed -n '7p' )
 Daemon=$(echo "$Gen" | sed -n '8p' )
 
-echo "All Good Ready to Write Data"
 
 ##  Write Values Back
 if [ "$Callsign" != "$eg1" ]; then 
@@ -596,14 +591,14 @@ Modems=$(dialog  --ascii-lines \
 
 returncode=$?
 
-#echo "$Gen"
 Port=$(echo "$Modems" | sed -n '1p')
-echo "Return Code = $returncode"
 
 
 if [  $returncode -eq 1 ]; then 
-   echo "Abort 1 Cancel " 
 	dialog --ascii-lines --infobox "Cancel Selected - Function Aborted\nSleeping 2 seconds" 10 40 ; sleep 2
+ 	MenuMain
+fi
+if [  $returncode -eq 255 ]; then 
  	MenuMain
 fi
 
@@ -675,7 +670,6 @@ MenuMain
 
 function EditDMR(){
 #5
-echo "Setting Varibles"
 d1=$(sed -nr "/^\[DMR\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 d2=$(sed -nr "/^\[DMR\]/ { :l /CallHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 d3=$(sed -nr "/^\[DMR\]/ { :l /TXHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
@@ -687,7 +681,6 @@ d8=$(sed -nr "/^\[DMR Network\]/ { :l /Type[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;
 d9=$(sed -nr "/^\[DMR Network\]/ { :l /Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 d10=$(sed -nr "/^\[DMR Network\]/ { :l /LocalPort[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 
-echo "Varibales all set"
 
 exec 3>&1
 
@@ -716,8 +709,11 @@ DMRs=$(dialog  --ascii-lines \
 returncode=$?
 
 if [ $returncode -eq 1 ]; then 
-   echo "Abort 1" 
 	dialog --ascii-lines --infobox "Cancel Selected1 - Function Aborted\nSleeping 2 seconds" 10 40 ; sleep 2
+	MenuMain
+fi
+
+if [ $returncode -eq 255 ]; then 
 	MenuMain
 fi
 
@@ -734,8 +730,6 @@ NetType=$(echo "$DMRs" | sed -n '8p' )
 NetPort=$(echo "$DMRs" | sed -n '9p' )
 NetLocalPort=$(echo "$DMRs" | sed -n '10p' )
 
-echo "NetAddress = $NetAddress"
-echo "All Good Ready to Write Data"
 
 ##  Write Values Back
 if [ "$Enable" != "$d1" ]; then
@@ -772,7 +766,6 @@ if [ "$NetLocalPort" != "$d10" ]; then
         sudo sed -i '/^\[/h;G;/DMR Networl]/s/\(LocalPort=\).*/\1'"$NetLocalPort"'/m;P;d' /etc/mmdvmhost
 fi
 
-echo "Data Write OK"
 	
 dialog --ascii-lines --infobox "DMR Data Write Complete " 10 30 ; sleep 1
 
@@ -783,7 +776,6 @@ MenuMain
 function EditP25(){
 #6
 
-echo "Setting Varibles"
 #P25 Section
 d1=$(sed -nr "/^\[P25\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 d2=$(sed -nr "/^\[P25\]/ { :l /NAC[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
@@ -807,14 +799,10 @@ d15=$(sed -nr "/^\[Network\]/ { :l /Static[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}
 d16=$(sed -nr "/^\[Network\]/ { :l /RFHangTime[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/p25gateway)
 d17=$(sed -nr "/^\[Network\]/ { :l /NetHangTime[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/p25gateway)
 
-echo "Varibales all set"
 
 returncode=0
 returncode=$?
 exec 3>&1
-
-#echo "Default DIALOG_CANCEL = $DIALOG_CANCEL"
-#echo "Default DIALOG_OK = $DIALOG_OK"
 
 
 P25d=$(dialog  --ascii-lines \
@@ -850,12 +838,10 @@ P25d=$(dialog  --ascii-lines \
 returncode=$?
 
 if [ $returncode -eq 1 ]; then
-   echo "Abort 2 - Return Code = 1"
         dialog --ascii-lines --infobox "Cancel Selected - Function Aborted!"
 	MenuMain
 fi
 if [ $returncode -eq 0 ]; then
-   echo "All OK - Return Code = 0"
         dialog --ascii-lines --infobox "P25 Updating P25 Parameters"
 fi
 
@@ -960,14 +946,12 @@ dialog \
 	--ascii-lines --msgbox " This function not yet impemented" 13 50
 
 result=$?
-echo "$result"
 MenuMain
 
 }
 function EditYSF(){
 #8
 
-echo "Setting Varibles"
 #YSF Section
 y1=$(sed -nr "/^\[System Fusion\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 y2=$(sed -nr "/^\[System Fusion\]/ { :l /LowDeviation[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
@@ -1009,7 +993,6 @@ y25=$(sed -nr "/^\[YSF Network\]/ { :l /Hosts[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b 
 
 
 
-echo "Varibales all set"
 
 returncode=0
 returncode=$?
@@ -1099,29 +1082,22 @@ MAINT=$(dialog --clear \
 exitcode=$?
 
 if [ "$exitcode" -eq 3 ]; then
-   echo "Exit 3 - Main Menu"
    MenuMain
 fi
 
 if [ "$exitcode" -eq 255 ]; then
-   echo "Exit 3 - Main Menu"
    MenuMain
 fi
 
 if [ "$exitcode" -eq 1 ]; then
-  echo "Abort Cancel 1"
         dialog --ascii-lines --infobox "Cancel Selected - Exiting Script\nSleeping 2 seconds" 5 40 ; sleep 2
 	clear
 
         exit
 fi
 
-echo "Exit Code = $exitcode"
-
-echo "Choice = $MAINT"
 
 if [ "$MAINT" -eq 1 ]; then
-        echo "You chose Option 1 - Bacup Config Files"
 		dates=$(date +%F)
                 cp /etc/mmdvmhost /etc/backups/mmdvmhost"-$dates"
                 cp /etc/ysfgateway /etc/backups/ysfgateway"-$dates"
@@ -1132,7 +1108,6 @@ if [ "$MAINT" -eq 1 ]; then
 		MenuMaint
 fi
 if [ "$MAINT" -eq 2 ]; then
-       	echo "You chose Option 2 - Restore Config Files"
 
      F1=$(dialog \
         --ascii-lines \
@@ -1143,12 +1118,9 @@ if [ "$MAINT" -eq 2 ]; then
 
 	exitcode=$?
 
-	echo "Exit Code = $exitcode"
-	echo "File = $F1"
         if [ ! -z "$F1" ]; then
  		bf=$(echo "$F1" | cut -d "-" -f 1 )
 		fn=$(echo "$bf" | cut -d "/" -f 4 )	
-           	echo "File to Backup = $bf"
 			dest='/etc/'
 	            	cp $bf $dest
 			err=$?
@@ -1160,7 +1132,6 @@ if [ "$MAINT" -eq 2 ]; then
 		fi
 
 	else
-		echo "No File "
 		dialog --ascii-lines --infobox "ERR - No File\nFunction Aborted" 5 40 ; sleep 2
         fi
 fi
@@ -1261,20 +1232,17 @@ Next=$(dialog  --ascii-lines \
         2>&1 1>&3)
 
 returncode=$?
-echo "Return Code = $returncode"
 #echo "$Next"
 
 exec 3>&-
 
 if [ $returncode -eq 1 ]; then
-  echo "Abort Cancel 3"
         dialog --ascii-lines --infobox "No Data - Function Aborted\nSleeping 2 seconds" 10 30 ; sleep 2
    MenuMain
 fi
 
 #Nextion
 Port=$(echo "$Next" | sed -n '2p')
-echo "Port0 = $Port"
 
 Brightness=$(echo "$Next" | sed -n '3p')
 DisplayClock=$(echo "$Next" | sed -n '4p')
@@ -1404,7 +1372,6 @@ dialog \
 	--ascii-lines --msgbox " This function not yet impemented" 13 50
 
 result=$?
-echo "$result"
 MenuMain
 }
 
@@ -1439,12 +1406,10 @@ returncode=$?
 
 
 if [ "$returncode" -eq 1 ]; then
-  echo "Abort Cancel 3"
         dialog --ascii-lines --infobox "No Data - Function Aborted\nSleeping 2 seconds" 10 30 ; sleep 2
         MenuMain
 fi
 Description=$(echo "$Infod" | sed -n '6p')
-echo "$RXFrequency"
 exec 3>&-
 
 
@@ -1457,7 +1422,6 @@ Description=$(echo "$Infod"  | sed -n '6p')
 URL=$(echo "$Infod"  | sed -n '7p' )
 
 
-echo "All Good Ready to Write Data"
 
 
 ##  Write Values Back
@@ -1492,7 +1456,7 @@ MenuMain
 function MenuMain(){
 
 HEIGHT=25
-WIDTH=40
+WIDTH=45
 CHOICE_HEIGHT=15
 BACKTITLE="MMDVM Host Configurator - VE3RD"
 TITLE="Main Menu"
@@ -1508,7 +1472,7 @@ OPTIONS=(1 "Edit General Section"
          8 "Edit YSF Section - UC"
 	 9 "Edit Nextion Sections" 
 	10 "Edit Non Nextion Displays - NYA"
-	11 "Edit Edit Mode Enables" 
+	11 "Edit Edit Mode Enables - NYA" 
 	12 "Edit Mode Hangs - NYA" 
 	13 "Edit DMRGateway" 
 	14 "Maintenance & Backup/Restore" 
@@ -1532,80 +1496,32 @@ if [ "$exitcode" -eq 3 ]; then
   mmdvmhost.service restart
 fi
 if [ "$exitcode" -eq 1 ]; then
-  echo "Abort Cancel 3"
         dialog --ascii-lines --infobox "Cancel Selected - Exiting Script\nSleeping 2 seconds" 5 40 ; sleep 2
-        exit
+         exit
    
 fi
 
-echo "Exit Code = $exitcode"
 
 if [ -z "$CHOICE" ]; then
- echo "Nothing Selected - Shutting Down"
  exit
 fi
 
 case $CHOICE in
-        1)
-            echo "You chose Option 1"
-        	EditGeneral 
-	   ;;
-        2)
-            echo "You chose Option 2"
-		EditInfo
-            ;;
-        3)
-            echo "You chose Option 3"
-		EditLog
-	    ;;
-        4)
-            echo "You chose Option 4"
-		EditModem 
-           ;;
-        5)
-            echo "You chose Option 5"
-		EditDMR	
-            ;;
-        6)
-            echo "You chose Option 6"
-        	EditP25
-	    ;;
-        7)
-            echo "You chose Option 7"
-            	EditNXDN
-		;;
-        8)
-            echo "You chose Option 8"
-         	EditYSF
-	   ;;
-        9)
-            echo "You chose Option 9"
-		EditNextion	
-            ;;
-        10)
-            echo "You chose Option 10"
-          	EditScreens
-	  ;;
-        11)
-            echo "You chose Option 11"
-          	EditModeGroup
-	  ;;
-        12)
-            echo "You chose Option 12"
-          	EditModeHangs
-	  ;;
-        13)
-            echo "You chose Option 13"
-          	EditDMRGate
-	  ;;
-        14)
-            echo "You chose Option 14"
-          	MenuMaint
-	  ;;
-        15)
-            echo "You chose Option 15"
-          	CheckSetModes
-	  ;;
+        1) EditGeneral ;;
+        2) EditInfo ;;
+        3) EditLog ;;
+        4) EditModem ;;
+        5) EditDMR ;;
+        6) EditP25 ;;
+        7) EditNXDN ;;
+        8) EditYSF ;;
+        9) EditNextion ;;
+        10) EditScreen ;;
+        11) EditModeGroup ;;
+        12) EditModeHangs ;;
+        13) EditDMRGate ;;
+        14) MenuMaint ;;
+        15) CheckSetModes ;;
 	
 esac
 
@@ -1670,7 +1586,7 @@ while read LINE
 	'/ >'*|---*|'/ > '*)
         continue;;
   esac
- echo -n " 1\"$LINE\"" >result
+ #echo -n " 1\"$LINE\"" >result
 done < tmpfile
 
 }
