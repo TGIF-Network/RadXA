@@ -141,7 +141,8 @@ if [ "$Net6" != "$dm6" ]; then
         sudo sed -i '/^\[/h;G;/DMR Network 6]/s/\(Enabled=\).*/\1'"$Net6"'/m;P;d' /etc/dmrgateway
 fi
 
-MenuMain
+CheckSetModes
+
 }
 #################
 function CheckDisplay(){ d=$(sed -nr "/^\[General\]/ { :l /Display[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost) d1="OFF" 
@@ -235,7 +236,7 @@ if [ $errorcode -eq 0 ] ; then
 	Id=$(echo "$dmrgn"  | sed -n '5p' )
 	Address=$(echo "$dmrgn"  | sed -n '6p' )
 	Password=$(echo "$dmrgn"  | sed -n '7p' )
-	Port=$(echo "$dmgn"  | sed -n '8p' )
+	Port=$(echo "$dmrgn"  | sed -n '8p' )
 	Local=$(echo "$dmrgn"  | sed -n '9p' )
 	TGRewrite0=$(echo "$dmrgn"  | sed -n '10p' )
 	TGRewrite1=$(echo "$dmrgn"  | sed -n '11p' )
