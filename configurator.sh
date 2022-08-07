@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 ############################################################
 #  This script will automate the process of                #
 #  Configring MMDVMHost 		   	           #
@@ -194,7 +194,7 @@ F1=$(dialog \
         --title "Select a file" \
         --stdout \
         --title "Please choose a file" \
-        --fselect /var/log/pi-star/ 30 0 )
+        --fselect "/var/log/pi-star/" 30 0 )
 
 # delete file
 
@@ -208,10 +208,10 @@ if [ $returncode -eq 255 ]; then
 fi
 
 if [ ! -z "$F1" ]; then
-echo "File = $F1"
+	echo "File = $F1"
 else
- echo " No File "
-  MenuMaint
+        dialog --ascii-lines --infobox "You Forgot to Select a File with the Space Bar\nGo Back and Try Again" 10 30 ; sleep 2
+	LogMon
 fi
 
 F2=$(dialog \
@@ -1476,6 +1476,7 @@ y8=$(sed -nr "/^\[General\]/ { :l /Suffix[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}"
 y9=$(sed -nr "/^\[General\]/ { :l /WiresXCommandPassthrough[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/ysfgateway)
 y10=$(sed -nr "/^\[General\]/ { :l /Id[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/ysfgateway)
 y11=$(sed -nr "/^\[General\]/ { :l /Daemon[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/ysfgateway)
+
 #Info Section
 y12=$(sed -nr "/^\[Info\]/ { :l /RXFrequency[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/ysfgateway)
 y13=$(sed -nr "/^\[Info\]/ { :l /TXFrequency[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/ysfgateway)
@@ -1486,7 +1487,6 @@ y17=$(sed -nr "/^\[Info\]/ { :l /Name[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /et
 y18=$(sed -nr "/^\[Info\]/ { :l /Description[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/ysfgateway)
 
 #Log
-
 y19=$(sed -nr "/^\[Log\]/ { :l /DisplayLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/ysfgateway)
 y20=$(sed -nr "/^\[Log\]/ { :l /FileLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/ysfgateway)
 y21=$(sed -nr "/^\[Log\]/ { :l /FilePath[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/ysfgateway)
@@ -1499,16 +1499,14 @@ y23=$(sed -nr "/^\[Network\]/ { :l /Startup[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;
 y24=$(sed -nr "/^\[YSF Network\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/ysfgateway)
 y25=$(sed -nr "/^\[YSF Network\]/ { :l /Hosts[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/ysfgateway)
 
-returncode=0
-returncode=$?
 exec 3>&1
 
 ysfd=$(dialog  --ascii-lines \
         --backtitle "MMDVM Host Configurator - VE3RD" \
-        --separate-widget  $'\n'   \
+        --separate-widget  $'\n' \
         --ok-label "Save" \
         --title "YSF Section" \
-        --mixedform "\n YSF Configuration Items (Editable)" 30 70 25\
+        --mixedform "\n YSF Configuration Items (Editable)" 0 70 0 \
         "YSF General"     	1 1 "YSF General"  		1 25 35 0 2 \
         "Enable"        	2 3 "$y1"  			2 25 35 0 0 \
         "LowDeviation"          3 3 "$y2"  			3 25 35 0 0 \
@@ -1523,7 +1521,7 @@ ysfd=$(dialog  --ascii-lines \
         "WiresXPassthrough"    	12 3 "$y9"      		12 25 35 0 0 \
         "Id"                   	13 3 "$y10"     		13 25 35 0 0 \
         "Daemon"               	14 3 "$y11"     		14 25 35 0 0 \
-        "P25Gateway Info"      	15 1 "YSFGateway Info"  	15 25 35 0 2 \
+        "YSFGateway Info"      	15 1 "YSFGateway Info"  	15 25 35 0 2 \
         "RXFrequency"          	16 3 "$y12"     		16 25 35 0 0 \
         "TXFrequency"          	17 3 "$y13"     		17 25 35 0 0 \
         "Power"       		18 3 "$y14"     		18 25 35 0 0 \
@@ -1535,23 +1533,162 @@ ysfd=$(dialog  --ascii-lines \
         "DisplayLevel"          24 3 "$y19"     		24 25 35 0 0 \
         "FileLevel"          	25 3 "$y20"     		25 25 35 0 0 \
         "FilePath"          	26 3 "$y21"     		26 25 35 0 0 \
-        "FileRoot"          	27 3 "$y22"     		27 25 35 0 2 \
+        "FileRoot"          	27 3 "$y22"     		27 25 35 0 0 \
         "YSGGateway Network"   	28 1 "YSFGateway Network"     	28 25 35 0 2 \
         "Startup"          	29 3 "$y23"     		29 25 35 0 0 \
         "YSFGateway YSF Net"   	30 1 "$YSFGateway YSF Net"     	30 25 35 0 2 \
-        "Hosts"          	31 3 "$y24"     		31 25 35 0 0 \
+        "Enable"          	31 3 "$y24"     		31 25 35 0 0 \
+        "Hosts"          	32 3 "$y25"     		32 25 35 0 0 \
  	2>&1 1>&3)
 
 returncode=$?
 
-dialog \
-        --backtitle "MMDVM Host Configurator - VE3RD" \
-	--title " Edit Nextion Sections "  \
-	--ascii-lines --msgbox " This function Under Construction\nData Writes Not Yet Enabled"  13 50
+if [ $returncode -eq 1 ]; then
+MenuMain
+fi
+
+if [ $returncode -eq 255 ]; then
+MenuMain
+fi
+
+
+##  1
+Enable1=$(echo "$ysfd" | sed -n '2p')
+LowDeviation=$(echo "$ysfd" | sed -n '3p')
+TXHang=$(echo "$ysfd" | sed -n '4p')
+ModeHang1=$(echo "$ysfd" | sed -n '5p')
+## 6
+Enable2=$(echo "$ysfd" | sed -n '7p')
+ModeHang2=$(echo "$ysfd" | sed -n '8p')
+## 9
+CallSign=$(echo "$ysfd" | sed -n '10p')
+Suffix=$(echo "$ysfd" | sed -n '11p')
+WiresXPass=$(echo "$ysfd" | sed -n '12p')
+Id=$(echo "$ysfd" | sed -n '13p')
+Daemon=$(echo "$ysfd" | sed -n '14p')
+## 15
+RXFrequency=$(echo "$ysfd" | sed -n '16p')
+TXFrequency=$(echo "$ysfd" | sed -n '17p')
+Power=$(echo "$ysfd" | sed -n '18p')
+Latitude=$(echo "$ysfd" | sed -n '19p')
+Longitude=$(echo "$ysfd" | sed -n '20p')
+Name=$(echo "$ysfd" | sed -n '21p')
+Description=$(echo "$ysfd" | sed -n '22p')
+## 23
+DisplayLevel=$(echo "$ysfd" | sed -n '24p')
+FileLevel=$(echo "$ysfd" | sed -n '25p')
+FilePath=$(echo "$ysfd" | sed -n '26p')
+FileRoot=$(echo "$ysfd" | sed -n '27p')
+## 28
+Startup=$(echo "$ysfd" | sed -n '29p')
+## 30
+Enable3=$(echo "$ysfd" | sed -n '31p')
+Hosts=$(echo "$ysfd" | sed -n '32p')
+
+
+if [ "$FilePath" != "$y21" ]; then
+  FROM=$(echo "$y21" | sed "s/\//\\\\\//g")
+  TO=$(echo "$FilePath" | sed "s/\//\\\\\//g")
+ # sed -i "/^\[Log\]/,/^$/s/^FilePath=$FROM/FilePath=$TO/" /etc/ysfgateway
+  sudo sed -i '/^\[/h;G;/Log]/s/\(FilePath=\).*/\1'"$TO"'/m;P;d' /etc/ysfgateway
+fi
+
+if [ "$Hosts" != "$y25" ]; then
+  FROM=$(echo "$y25" | sed "s/\//\\\\\//g")
+  TO=$(echo "$Hosts" | sed "s/\//\\\\\//g")
+#  sed -i "/^\[YSF Network\]/,/^$/s/^Hosts=$FROM/FilePath=$TO/" /etc/ysfgateway
+  sudo sed -i '/^\[/h;G;/YSF Network]/s/\(Hosts=\).*/\1'"$TO"'/m;P;d' /etc/ysfgateway
+fi
+
+if [ "$Enable1" != "$y1" ]; then
+        sudo sed -i '/^\[/h;G;/System Fusion]/s/\(Enable=\).*/\1'"$Enable1"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$LowDeviation" != "$y2" ]; then
+        sudo sed -i '/^\[/h;G;/System Fusion]/s/\(LowDeviation=\).*/\1'"$LowDeviation"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$TXHang" != "$y3" ]; then
+        sudo sed -i '/^\[/h;G;/System Fusion]/s/\(TXHang=\).*/\1'"$TXHang"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$ModeHang1" != "$y4" ]; then
+        sudo sed -i '/^\[/h;G;/System Fusion]/s/\(ModeHang=\).*/\1'"$ModeHang1"'/m;P;d' /etc/mmdvmhost
+fi
+##
+if [ "$Enable2" != "$y5" ]; then
+        sudo sed -i '/^\[/h;G;/System Fusion Network]/s/\(Enable=\).*/\1'"$Enable1"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$ModeHang2" != "$y6" ]; then
+        sudo sed -i '/^\[/h;G;/System Fusion Network]/s/\(ModeHang2=\).*/\1'"$ModeHang2"'/m;P;d' /etc/mmdvmhost
+fi
+##
+if [ "$CallSign" != "$y7" ]; then
+        sudo sed -i '/^\[/h;G;/General]/s/\(CallSign=\).*/\1'"$CallSign"'/m;P;d' /etc/ysfgateway
+fi
+if [ "$Suffix" != "$y8" ]; then
+        sudo sed -i '/^\[/h;G;/General]/s/\(Suffix=\).*/\1'"$Suffix"'/m;P;d' /etc/ysfgateway
+fi
+if [ "$WiresXPass" != "$y19" ]; then
+        sudo sed -i '/^\[/h;G;/General]/s/\(WiresXCommandPassthrough=\).*/\1'"$WiresXPass"'/m;P;d' /etc/ysfgateway
+fi
+if [ "$Id" != "$y10" ]; then
+        sudo sed -i '/^\[/h;G;/General]/s/\(Id=\).*/\1'"$Id"'/m;P;d' /etc/ysfgateway
+fi
+if [ "$Daemon" != "$y11" ]; then
+        sudo sed -i '/^\[/h;G;/General]/s/\(Daemon=\).*/\1'"$Daemon"'/m;P;d' /etc/ysfgateway
+fi
+##
+if [ "$RXFrequency" != "$y12" ]; then
+        sudo sed -i '/^\[/h;G;/Info]/s/\(RXFrequency=\).*/\1'"$RXFrequency"'/m;P;d' /etc/ysfgateway
+fi
+if [ "$TXFrequency" != "$y13" ]; then
+        sudo sed -i '/^\[/h;G;/Info]/s/\(TXFrequency=\).*/\1'"$TXFrequency"'/m;P;d' /etc/ysfgateway
+fi
+if [ "$Power" != "$y14" ]; then
+        sudo sed -i '/^\[/h;G;/Info]/s/\(Power=\).*/\1'"$Power"'/m;P;d' /etc/ysfgateway
+fi
+if [ "$Latitude" != "$y15" ]; then
+        sudo sed -i '/^\[/h;G;/Info]/s/\(Latitude=\).*/\1'"$Latitude"'/m;P;d' /etc/ysfgateway
+fi
+if [ "$Longitude" != "$y16" ]; then
+        sudo sed -i '/^\[/h;G;/Info]/s/\(Longitude=\).*/\1'"$Longitude"'/m;P;d' /etc/ysfgateway
+fi
+if [ "$Name" != "$y17" ]; then
+        sudo sed -i '/^\[/h;G;/Info]/s/\(Name=\).*/\1'"$Name"'/m;P;d' /etc/ysfgateway
+fi
+if [ "$Description" != "$y18" ]; then
+        sudo sed -i '/^\[/h;G;/Info]/s/\(Description=\).*/\1'"$Description"'/m;P;d' /etc/ysfgateway
+fi
+
+##
+
+if [ "$DisplayLevel" != "$y19" ]; then
+        sudo sed -i '/^\[/h;G;/Log]/s/\(DisplayLevel=\).*/\1'"$DisplayLevel"'/m;P;d' /etc/ysfgateway
+fi
+if [ "$FileLevel" != "$y20" ]; then
+        sudo sed -i '/^\[/h;G;/Log]/s/\(FileLevel=\).*/\1'"$FileLevel"'/m;P;d' /etc/ysfgateway
+fi
+if [ "$FileRoot" != "$y22" ]; then
+        sudo sed -i '/^\[/h;G;/Log]/s/\(FileRoot=\).*/\1'"$FileRoot"'/m;P;d' /etc/ysfgateway
+fi
+##
+if [ "$Startup" != "$y23" ]; then
+        sudo sed -i '/^\[/h;G;/Network]/s/\(Startup=\).*/\1'"$Startup"'/m;P;d' /etc/ysfgateway
+fi
+##
+if [ "$Enable3" != "$y24" ]; then
+        sudo sed -i '/^\[/h;G;/YSF Network]/s/\(Enable=\).*/\1'"$Enable3"'/m;P;d' /etc/ysfgateway
+fi
+##
+
+#dialog \
+#        --backtitle "MMDVM Host Configurator - VE3RD" \
+#	--title " Edit Nextion Sections "  \
+#	--ascii-lines --msgbox " This function Under Construction"  13 50
+#
 
 EditYSF
 
 }
+
 ###################
 function MenuMaint(){
 if [ ! -d /etc/backups ]; then
@@ -1587,9 +1724,6 @@ MAINT=$(dialog --clear \
 		9 "Services" 2>&1 >/dev/tty)
 exitcode=$?
 
-if [ "$exitcode" -eq 1 ]; then
-   MenuMain
-fi
 if [ "$exitcode" -eq 3 ]; then
    MenuMain
 fi
@@ -1618,14 +1752,15 @@ if [ "$MAINT" -eq 1 ]; then
 		err4=$?
                 cp /etc/dmrgateway /etc/backups/dmrgateway"-$dates"
 		err5=$?
-errt=[[ $err1+$err2+$err3+$err4+$err5]]
+	errt=[[ $err1+$err2+$err3+$err4+$err5]]
 
-if [ $errt -gt 0 ]; then
+	if [ $errt -gt 0 ]; then
         	dialog --ascii-lines --infobox "Backups FAILED!!  - Reloading Menu" 5 40 ; sleep 2        	
-else
+	else
 		dialog --ascii-lines --infobox "Backups Complete - Reloading Menu" 5 40 ; sleep 2
-fi
-		MenuMaint
+	fi
+		
+	MenuMaint
 fi
 
 
@@ -1652,18 +1787,15 @@ if [ "$MAINT" -eq 2 ]; then
         if [ ! -z "$F1" ]; then
  		bf=$(echo "$F1" | cut -d "-" -f 1 )
 		fn=$(echo "$bf" | cut -d "/" -f 4 )	
-			dest="/etc/$fn"
-	            	cp $F1 $dest
-			err=$?
-	#echo "Full File Name = $F1"
-	#echo "S: $F1    D: $dest"
+		dest="/etc/$fn"
+	  	cp $F1 $dest
+		err=$?
 		if [ $err -eq 0 ]; then
 			dialog --ascii-lines --infobox "Backup Config File $F1\nRestored to $dest" 5 60 ; sleep 5
 		else
 			dialog --ascii-lines --infobox "Restore Operation Failed" 5 40 ; sleep 2
 		
 		fi
-
 	else
 		dialog --ascii-lines --infobox "ERR - No File\nFunction Aborted" 5 40 ; sleep 2
         fi
@@ -1672,35 +1804,37 @@ fi
 if [ "$MAINT" -eq 3 ]; then
 sudo mmdvmhost.services restart
 fi
+
 if [ "$MAINT" -eq 4 ]; then
 sudo dmrgateway.services restart
 fi
+
 if [ "$MAINT" -eq 5 ]; then
-sudo mmdvmhost.service restart
-sudo dmrgateway.service restar
-sudo p25gateway.service restart
-sudo ysfgateway.service restart
-sudo nxdngateway.service restart
+	sudo mmdvmhost.service restart
+	sudo dmrgateway.service restar
+	sudo p25gateway.service restart
+	sudo ysfgateway.service restart
+	sudo nxdngateway.service restart
 fi
 
 if [ "$MAINT" -eq 6 ]; then
-echo "Rebooting Hotspot - Log back in when it come up"
-sudo reboot
-exit
-
+	echo "Rebooting Hotspot - Log back in when it come up"
+	sudo reboot
+	exit
 fi
+
 if [ "$MAINT" -eq 7 ]; then
-echo "Updating All Host Files"
-echo "Please WAIT a few seconds"
-sudo HostFilesUpdate.sh
+	echo "Updating All Host Files"
+	echo "Please WAIT a few seconds"
+	sudo HostFilesUpdate.sh
 fi
 
 if [ "$MAINT" -eq 8 ]; then
-LogMon
+	LogMon
 fi
 
 if [ "$MAINT" -eq 9 ]; then
-Services
+	Services
 fi
 
 MenuMaint
@@ -1993,8 +2127,8 @@ EditInfo
 ###############################
 function MenuMain(){
 
+#echo "Starting Main Menu Dialog"
 
-echo "Starting Main Menu Dialog"
 HEIGHT=25
 WIDTH=60
 CHOICE_HEIGHT=35
@@ -2018,7 +2152,7 @@ CHOICE=$(dialog --clear \
          	5 "Edit DMR Section" \
          	6 "Edit P25 Section" \
          	7 "Edit NXDN Section - UC" \
-         	8 "Edit YSF Section - UC" \
+         	8 "Edit YSF Section" \
          	9 "Edit Nextion Sections" \
         	10 "Edit Non Nextion Displays - NYA" \
         	11 "Edit Edit Mode Enables - NYA" \
