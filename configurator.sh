@@ -13,7 +13,9 @@ clear
 echo -e "\e[1;97;44m"
 tput setab 4
 clear
-declare -i GWPage
+declare -i GWPage=1
+declare -i sectN=1
+declare -i indx=1
 ((GWPage=1))
 export GWPage
 
@@ -31,17 +33,16 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 #printf "I ${RED}love${NC} Stack Overflow\n"
 
+#########  Start of Functions  ################
 function exitcode
 {
-txt='Abort Function\n\n
-This Script will Now Stop'"\n$exittext"
-
-dialog --title "  Programmed Exit  " --ascii-lines --msgbox "$txt" 8 78
-
-tput setab 9 mode="" clear echo -e '\e[1;40m' run="Done" exit
-
+	txt='Abort Function\n\n
+	This Script will Now Stop'"\n$exittext"
+	dialog --title "  Programmed Exit  " --ascii-lines --msgbox "$txt" 8 78
+	tput setab 9 mode="" clear echo -e '\e[1;40m' run="Done" 
+exit
 }
-
+##############
 function CheckSetModes(){
 md1=$(sed -nr "/^\[D-Star\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 md2=$(sed -nr "/^\[DMR\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
@@ -76,15 +77,15 @@ echo "DMR Net4 Enabled = $dm4"
         "Net 3"   	10 1 "$dm3"    		10 15 35 0 0 \
         "Net 4"     	11 1 "$dm4"   		11 15 35 0 0 \
         "Net 5"         12 1 "$dm5"   		12 15 35 0 0 \
-        "Net 6"      	13 1 "$dm6"    		13 15 35 0 0) 
+        "Net 6"      	13 1 "$dm6"    		13 15 35 0 0 ) 
 
 errorcode=$?
 
 if [ $errorcode -eq 1 ]; then
-MenuMain
+	MenuMain
 fi
 if [ $errorcode -eq 255 ]; then
-MenuMain
+	MenuMain
 fi
 
 
@@ -142,15 +143,9 @@ fi
 
 MenuMain
 }
-
-function CheckDisplay(){
-d=$(sed -nr "/^\[General\]/ { :l /Display[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-d1="OFF"
-d2="OFF"
-d3="OFF"
-d4="OFF"
-d5="OFF"
-d6="OFF"
+#################
+function CheckDisplay(){ d=$(sed -nr "/^\[General\]/ { :l /Display[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost) d1="OFF" 
+d2="OFF" d3="OFF" d4="OFF" d5="OFF" d6="OFF"
 
 case "$d" in
   "None") d1="ON" ;;
@@ -161,20 +156,143 @@ case "$d" in
 esac
 
 }
-
+#############
 function EditModeGroup(){
    dialog --ascii-lines --infobox "Not Yet Implemented - Sleeping 2 seconds" 10 40 ; sleep 2
 	MenuMain
 }
+############
 function EditModeHangs(){
    dialog --ascii-lines --infobox "Not Yet Implemented - Sleeping 2 seconds" 10 40 ; sleep 2
 	MenuMain
 }
+#############
+
+function EditDMRGateNet(){
+N="$1"
+echo "$N"
+sect="DMR Network $N"
+echo "Section = $sect"
+
+dm1a=$(sed -nr "/^\[$sect/ { :l /^Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm2a=$(sed -nr "/^\[$sect/ { :l /^Name[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm3a=$(sed -nr "/^\[$sect/ { :l /^Id[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm4a=$(sed -nr "/^\[$sect/ { :l /^Address[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm5a=$(sed -nr "/^\[$sect/ { :l /^Password[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm6a=$(sed -nr "/^\[$sect/ { :l /^Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm7a=$(sed -nr "/^\[$sect/ { :l /^Local[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm8a=$(sed -nr "/^\[$sect/ { :l /^TGRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm9a=$(sed -nr "/^\[$sect1/ { :l /^TGRewrite1[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm10a=$(sed -nr "/^\[$sect/ { :l /^PCRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm11a=$(sed -nr "/^\[$sect/ { :l /^SrcRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+
+exec 3>&1
+
+ dmrgn=$(dialog \
+	--title "DMRGateway Networks Section - Page $N" \
+	--ok-label "Submit" \
+	--extra-button \
+	--colors \
+	--extra-label "Next Page" \
+	--backtitle "MMDVM Host Configurator - VE3RD" \
+	--ascii-lines \
+	--mixedform "DMRGateway $sect Configuration Items (Editable)" 30 60 15 \
+	"Jump To Net" 	1 1 	"0" 		1 15 35 0 0 \
+	"DMR Net $N" 	3 1 	"$DMR Net $N" 	3 15 35 0 2 \
+	"Enabled" 	4 1 	"$dm1a" 	4 15 35 0 0 \
+	"Name" 		5 1 	"$dm2a" 	5 15 35 0 0 \
+	"Id" 		6 1 	"$dm3a" 	6 15 35 0 0 \
+	"Address" 	7 1 	"$dm4a" 	7 15 35 0 0 \
+	"Password" 	8 1 	"$dm5a" 	8 15 35 0 0 \
+	"Port" 		9 1 	"$dm6a" 	9 15 35 0 0 \
+	"Local" 	10 1 	"$dm7a" 	10 15 35 0 0 \
+	"TGRewrite0" 	11 1 	"$dm8a" 	11 15 35 0 0 \
+	"TGRewrite1" 	12 1 	"$dm9a" 	12 15 35 0 0 \
+	"PCRewrite0" 	13 1 	"$dm10a" 	13 15 35 0 0 \
+	"SrcRewrite0" 	14 1 	"$dm11a" 	14 15 35 0 0 \
+	2>&1 1>&3 )
+
+errorcode=$?
+
+if [ $errorcode -eq 1 ]; then
+MenuMain
+fi
+
+if [ $errorcode -eq 3 ]; then
+ 	indx=$[indx + 1]
+##	if (( $indx > 0 )) && (( $indx < 7 )); then
+	if [ $indx > 0 ] && [ $indx < 7 ]; then
+		(( indx=1 ))
+	fi
+	EditDMRGateNet "$indx"       
+fi
+
+if [ $errorcode -eq 0 ] ; then
+	Jump=$(echo "$dmrgn"  | sed -n '1p' )
+
+	Enabled=$(echo "$dmrgn" | sed -n '3p' )
+	Name=$(echo "$dmrgn"  | sed -n '4p' )
+	Id=$(echo "$dmrgn"  | sed -n '5p' )
+	Address=$(echo "$dmrgn"  | sed -n '6p' )
+	Password=$(echo "$dmrgn"  | sed -n '7p' )
+	Port=$(echo "$dmgn"  | sed -n '8p' )
+	Local=$(echo "$dmrgn"  | sed -n '9p' )
+	TGRewrite0=$(echo "$dmrgn"  | sed -n '10p' )
+	TGRewrite1=$(echo "$dmrgn"  | sed -n '11p' )
+	PCRewrite0=$(echo "$dmrgn"  | sed -n '12p' )
+	SrcRewrite0=$(echo "$dmrgn"  | sed -n '13p' )
+#	echo "S: $SrcRewrite0"
+fi
+
+if [ "$Jump" -gt 0 ] && [ "$Jump" -lt 7 ]; then
+	EditDMRGateNet "$Jump"
+fi
 
 
+if [ "$Enabled" != "$dm1a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Enabled=\).*/\1'"$Enabled"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Name" != "$dm2a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Name=\).*/\1'"$Name"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Id" != "$dm3a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Id=\).*/\1'"$Id"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Address" != "$dm4a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Address=\).*/\1'"$Address"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Password" != "$dm5a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Password=\).*/\1'"$Password"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Port" != "$dm6a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Port=\).*/\1'"$Port"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Local" != "$dm7a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Local=\).*/\1'"$Local"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$TGRewrite0" != "$dm8a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(TGRewrite0=\).*/\1'"$TGRewrite0"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$TGRewrite1" != "$dm9a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(TGRewrite1=\).*/\1'"$TGRewrite1"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$PCRewrite0" != "$dm10a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(PCRewrite0=\).*/\1'"$PCRewrite0"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$SrcRewrite0" != "$dm11a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(SrcRewrite0=\).*/\1'"$SrcRewrite0"'/m;P;d' /etc/dmrgateway
+fi
+
+exec 3>&1
+ EditDMRGateNet "$indx"
+
+
+}
+############
 function EditDMRGate23(){
+ 
 
-if [ $GWPage -gt 3]; then
+if [ $GWPage -gt 3 ]; then
    (( GWPage=1 ))
 	EditDMRGate
 fi 
@@ -197,6 +315,8 @@ if [ "$GWPage" -eq 3 ]; then
 	DMRNetc="DMR Net 6"
 	elabel="MainGW"
 fi
+
+EditDMRGateNet 2
 
 # sed -nr "/^\[$Sect2/ 
 
@@ -239,7 +359,7 @@ dm11c=$(sed -nr "/^\[$Sect3/ { :l /^SrcRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; 
 
 exec 3>&1
 
- dmrg=$(dialog \
+ dmrg2=$(dialog \
         --title "DMRGateway Networks Section - Page $GWPage" \
         --ok-label "Submit" \
 	--extra-button \
@@ -247,48 +367,45 @@ exec 3>&1
 	--extra-label "Next Page" \
         --backtitle "MMDVM Host Configurator - VE3RD" \
         --ascii-lines \
-        --mixedform "DMRGateway Configuration Items (Editable)" 0 60 0 \
+        --mixedform "DMRGateway Configuration Items (Editable)" 0 60 40 \
         "DMR Neta A"  	1 1 "$DMRNeta"  1 15 35 0 2 \
         "Enabled"  	2 1 "$dm1a"  	2 15 35 0 0 \
         "Name"     	3 1 "$dm2a"  	3 15 35 0 0 \
         "Id"      	4 1 "$dm3a"  	4 15 35 0 0 \
-        "Password"      5 1 "$dm4a"  	5 15 35 0 0 \
-        "Port"    	6 1 "$dm5a"  	6 15 35 0 0 \
-        "Local"    	7 1 "$dm6a"  	7 15 35 0 0 \
-        "TGRewrite0"    8 1 "$dm7a"  	8 15 35 0 0 \
-        "TGRewrite1"    9 1 "$dm8a"  	9 15 35 0 0 \
-        "SrcRewrite0" 	10 1 "$dm9a"  	10 15 35 0 0 \
-        "Port"    	11 1 "$dm10a"  	11 15 35 0 0 \
-        "Local"    	12 1 "$dm11a"  	12 15 35 0 0 \
+        "Address"       5 1 "$dm4a"  	5 15 35 0 0 \
+        "Password"      6 1 "$dm5a"  	6 15 35 0 0 \
+        "Port"    	7 1 "$dm6a"  	7 15 35 0 0 \
+        "Local"    	8 1 "$dm7a"  	8 15 35 0 0 \
+        "TGRewrite0"    9 1 "$dm8a"  	9 15 35 0 0 \
+        "TGRewrite1"    10 1 "$dm9a"  	10 15 35 0 0 \
+        "PCRewrite0" 	11 1 "$dm10a"  	11 15 35 0 0 \
+        "SrcRewrite0" 	12 1 "$dm11a"  	12 15 35 0 0 \
     	"DMR Net B"     13 1 "$DMRNetb" 13 15 35 0 2 \
         "Enabled"       14 1 "$dm1b"    14 15 35 0 0 \
         "Name"          15 1 "$dm2b"    15 15 35 0 0 \
         "Id"            16 1 "$dm3b"    16 15 35 0 0 \
-        "Password"      17 1 "$dm4b"    17 15 35 0 0 \
-        "Port"          18 1 "$dm5b"    18 15 35 0 0 \
-        "Local"         19 1 "$dm6b"    19 15 35 0 0 \
-        "TGRewrite0"    20 1 "$dm7b"    20 15 35 0 0 \
-        "TGRewrite1"    21 1 "$dm8b"    21 15 35 0 0 \
-        "SrcRewrite0"   22 1 "$dm9b"    22 15 35 0 0 \
-        "Port"          23 1 "$dm10b"   23 15 35 0 0 \
-        "Local"         24 1 "$dm11b"   24 15 35 0 0 \
-        "DMRNet C"      25 1 "$DMRNetc"  25 15 35 0 2 \
+        "Address"       17 1 "$dm4a"  	17 15 35 0 0 \
+        "Password"      18 1 "$dm5b"    18 15 35 0 0 \
+        "Port"          19 1 "$dm6b"    19 15 35 0 0 \
+        "Local"         20 1 "$dm7b"    20 15 35 0 0 \
+        "TGRewrite0"    21 1 "$dm8b"    21 15 35 0 0 \
+        "TGRewrite1"    22 1 "$dm9b"    22 15 35 0 0 \
+        "PCRewrite0"    23 1 "$dm10b"   23 15 35 0 0 \
+        "SrcRewrite"    24 1 "$dm11b"   24 15 35 0 0 \
+        "DMRNet C"      25 1 "$DMRNetc" 25 15 35 0 2 \
         "Enabled"       26 1 "$dm1c"    26 15 35 0 0 \
         "Name"          27 1 "$dm2c"    27 15 35 0 0 \
         "Id"            28 1 "$dm3c"    28 15 35 0 0 \
-        "Password"      29 1 "$dm4c"    29 15 35 0 0 \
-        "Port"          30 1 "$dm5c"    30 15 35 0 0 \
-        "Local"         31 1 "$dm6c"    31 15 35 0 0 \
-        "TGRewrite0"    32 1 "$dm7c"    32 15 35 0 0 \
-        "TGRewrite1"    33 1 "$dm8c"    33 15 35 0 0 \
-        "SrcRewrite0"   34 1 "$dm9c"    34 15 35 0 0 \
-        "Port"          35 1 "$dm10c"   35 15 35 0 0 \
-        "Local"         36 1 "$dm11c"   36 15 35 0 0 2>&1 1>&3 )
-
+        "Address"       29 1 "$dm4a"  	29 15 35 0 0 \
+        "Password"      30 1 "$dm5c"    30 15 35 0 0 \
+        "Port"          31 1 "$dm6c"    31 15 35 0 0 \
+        "Local"         32 1 "$dm7c"    32 15 35 0 0 \
+        "TGRewrite0"    33 1 "$dm8c"    33 15 35 0 0 \
+        "TGRewrite1"    34 1 "$dm9c"    34 15 35 0 0 \
+        "PCRewrite0"    35 1 "$dm10c"   35 15 35 0 0 \
+        "SrcRewrite"    36 1 "$dm11c"   36 15 35 0 0 2>&1 1>&3 )
 
 errorcode=$?
-
-
 
 if [ $errorcode -eq 1 ]; then
    dialog --ascii-lines --infobox "Cancel selected - Sleeping 2 seconds" 10 40 ; sleep 2
@@ -309,14 +426,224 @@ if [ $errorcode -eq 255 ]; then
 MenuMain
 fi
 
-EditDMRGate
-exit #$$$$
+############  Net 1/4
+echo Starting Net A"
+if [ $GWPage -eq 2 ]; then
+	sect="DMR Network 1"
+fi
+if [ $GWPage -eq 3 ]; then
+	sect="DMR Network 4"
+fi
+ 
+echo " Net 1 Check - Sect = $sect"
+sleep 2
+
+Enabled1=$(echo "$dmrg2" | sed -n '2p' )
+Name1=$(echo "$dmrg2"  | sed -n '3p' )
+Id1=$(echo "$dmrg2"  | sed -n '4p' )
+Address1=$(echo "$dmrg2"  | sed -n '5p' )
+Password1=$(echo "$dmrg2"  | sed -n '6p' )
+Port1=$(echo "$dmg2"  | sed -n '7p' )
+Local1=$(echo "$dmrg2"  | sed -n '8p' )
+TGRewrite01=$(echo "$dmrg2"  | sed -n '9p' )
+TGRewrite11=$(echo "$dmrg2"  | sed -n '10p' )
+PCRewrite01=$(echo "$dmrg2"  | sed -n '11p' )
+SrcRewrite01=$(echo "$dmrg2"  | sed -n '12p' )
+
+##Net1/4
+
+if [ "$Enabled1" != "$dm1a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Enabled=\).*/\1'"$Enabled1"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Name1" != "$dm2a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Name=\).*/\1'"$Name1"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Id1" != "$dm3a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Id=\).*/\1'"$Id1"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Address1" != "$dm4a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Address=\).*/\1'"$Address1"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Password1" != "$dm5a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Password=\).*/\1'"$Password1"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Port1" != "$dm6a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Port=\).*/\1'"$Port1"'/m;P;d' /etc/dmrgateway
+fi
+
+if [ "$Local1" != "$dm7a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Local=\).*/\1'"$Local1"'/m;P;d' /etc/dmrgateway
+fi
+
+if [ "$TGRewrite01" != "$dm8a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(TGRewrite0=\).*/\1'"$TGRewrite01"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$TGRewrite11" != "$dm9a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(TGRewrite1=\).*/\1'"$TGRewrite11"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$PCRewrite01" != "$dm10a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(PCRewrite0=\).*/\1'"$PCRewrite01"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$SrcRewrite01" != "$dm11a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(SrcRewrite0=\).*/\1'"$SrcRewrite01"'/m;P;d' /etc/dmrgateway
+fi
+
+echo Starting Net B"
+###### Start Net 2/5
+if [ $GWPage -eq 2 ]; then
+	sect="DMR Network 2"
+fi
+if [ $GWPage -eq 3 ]; then
+	sect="DMR Network 5"
+fi
+
+echo " Net 2 Check - Sect = $sect"
+sleep 5
+
+Enabled1=$(echo "$dmrg2" | sed -n '14p' )
+Name1=$(echo "$dmrg2"  | sed -n '15p' )
+Id1=$(echo "$dmrg2"  | sed -n '16p' )
+Address1=$(echo "$dmrg2"  | sed -n '17p' )
+Password1=$(echo "$dmrg2"  | sed -n '18p' )
+Port1=$(echo "$dmrg2"  | sed -n '19' )
+Local1=$(echo "$dmrg2"  | sed -n '20p' )
+TGRewrite01=$(echo "$dmrg2"  | sed -n '21p' )
+TGRewrite11=$(echo "$dmrg2"  | sed -n '22p' )
+PCRewrite01=$(echo "$dmrg2"  | sed -n '23p' )
+SrcRewrite01=$(echo "$dmrg2"  | sed -n '24p' )
+
+
+##Net 2/5
+i=1
+echo i
+if [ "$Enabled1" != "$dm1a" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Enabled=\).*/\1'"$Enabled1"'/m;P;d' /etc/dmrgateway
+fi
+
+
+if [ "$Enabled1" != "$dm1b" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Enabled=\).*/\1'"$Enabled1"'/m;P;d' /etc/dmrgateway
+fi
+ echo $((i=i+1))
+if [ "$Name1" != "$dm2b" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Name=\).*/\1'"$Name1"'/m;P;d' /etc/dmrgateway
+fi
+ echo $((i=i+1))
+if [ "$Id1" != "$dm3b" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Id=\).*/\1'"$Id1"'/m;P;d' /etc/dmrgateway
+fi
+ echo $((i=i+1))
+if [ "$Address1" != "$dm4b" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Address=\).*/\1'"$Address1"'/m;P;d' /etc/dmrgateway
+fi
+ echo $((i=i+1))
+if [ "$Password1" != "$dm5b" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Password=\).*/\1'"$Password1"'/m;P;d' /etc/dmrgateway
+fi
+ echo $((i=i+1))
+if [ "$Port1" != "$dm6b" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Port=\).*/\1'"$Port1"'/m;P;d' /etc/dmrgateway
+fi
+ echo $((i=i+1))
+if [ "$Local1" != "$dm7b" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Local=\).*/\1'"$Local1"'/m;P;d' /etc/dmrgateway
+fi
+ echo $((i=i+1))
+if [ "$TGRewrite01" != "$dm8b" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(TGRewrite0=\).*/\1'"$TGRewrite01"'/m;P;d' /etc/dmrgateway
+fi
+ echo $((i=i+1))
+if [ "$TGRewrite11" != "$dm9b" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(TGRewrite1=\).*/\1'"$TGRewrite11"'/m;P;d' /etc/dmrgateway
+fi
+ echo $((i=i+1))
+if [ "$PCRewrite01" != "$dm10b" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(PCRewrite0=\).*/\1'"$PCRewrite01"'/m;P;d' /etc/dmrgateway
+fi
+ echo $((i=i+1))
+if [ "$SrcRewrite01" != "$dm11b" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(SrcRewrite0=\).*/\1'"$SrcRewrite01"'/m;P;d' /etc/dmrgateway
+fi
+ echo $((i=i+1))
+
+echo "Starting Net C"
+exit
+#############  Start Net 3/6
+
+if [ $GWPage -eq 2 ]; then
+	sect="DMR Network 3"
+fi
+if [ $GWPage -eq 3 ]; then
+	sect="DMR Network 6"
+fi
+
+echo " Net 3 Check - Sect = $sect"
+sleep 5
+	
+
+Enabled1=$(echo "$dmrg2" | sed -n '26p' )
+Name1=$(echo "$dmrg2"  | sed -n '27p' )
+Id1=$(echo "$dmrg2"  | sed -n '28p' )
+Address1=$(echo "$dmrg2"  | sed -n '29p' )
+Password1=$(echo "$dmrg2"  | sed -n '30p' )
+Port1=$(echo "$dmrg2"  | sed -n '31p' )
+Local1=$(echo "$dmrg2"  | sed -n '32p' )
+TGRewrite01=$(echo "$dmrg2"  | sed -n '33p' )
+TGRewrite11=$(echo "$dmrg2"  | sed -n '34p' )
+PCRewrite01=$(echo "$dmrg2"  | sed -n '35p' )
+SrcRewrite1=$(echo "$dmrg2"  | sed -n '36p' )
+
+if [ -z "$SrcRewrite" ]; then
+echo "SrcRewrite  Net3"
+exit
+fi
+
+if [ "$Enabled1" != "$dm1c" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Enabled=\).*/\1'"$Enabled1"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Name1" != "$dm2c" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Name=\).*/\1'"$Name1"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Id1" != "$dm3c" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Id=\).*/\1'"$Id1"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Address1" != "$dm4c" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Address=\).*/\1'"$Address1"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Password1" != "$dm5c" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Password=\).*/\1'"$Password1"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Port1" != "$dm6c" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Port=\).*/\1'"$Port1"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Local1" != "$dm7c" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(Local=\).*/\1'"$Local1"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$TGRewrite01" != "$dm8c" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(TGRewrite0=\).*/\1'"$TGRewrite01"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$TGRewrite11" != "$dm9c" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(TGRewrite1=\).*/\1'"$TGRewrite11"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$PCRewrite01" != "$dm10c" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(PCRewrite0=\).*/\1'"$PCRewrite01"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$SrcRewrite01" != "$dm11c" ]; then
+        sudo sed -i '/^\[/h;G;/[$sect]/s/\(SrcRewrite0=\).*/\1'"$SrcRewrite01"'/m;P;d' /etc/dmrgateway
+fi
+
+EditDMRGate23
 
 }
+####################
 
 function EditDMRGate(){
 ((GWPage=1))
 elabel="Net 123"
+
+EditDMRGateNet 1
+exit
+
 
 g1=$(sed -nr "/^\[General\]/ { :l /^RuleTrace[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 g2=$(sed -nr "/^\[General\]/ { :l /^StartNet[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
@@ -325,54 +652,55 @@ g4=$(sed -nr "/^\[General\]/ { :l /^Daemon[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}
 g5=$(sed -nr "/^\[General\]/ { :l /^RFTimeout[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 g6=$(sed -nr "/^\[General\]/ { :l /^NetTimeout[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 
-g7=$(sed -nr "/^\[Log\]/ { :l /^Displayevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+g7=$(sed -nr "/^\[Log\]/ { :l /^DisplayLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 g8=$(sed -nr "/^\[Log\]/ { :l /^FileLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 g9=$(sed -nr "/^\[Log\]/ { :l /^FilePath[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 g10=$(sed -nr "/^\[Log\]/ { :l /^FileRoot[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 
 g11=$(sed -nr "/^\[Info\]/ { :l /^Latitude[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 g12=$(sed -nr "/^\[Info\]/ { :l /^Longitude[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-g13=$(sed -nr "/^\[Info\]/ { :l /^Description[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-g14=$(sed -nr "/^\[Info\]/ { :l /^URL[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-g15=$(sed -nr "/^\[Info\]/ { :l /^RXFrequency[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-g16=$(sed -nr "/^\[Info\]/ { :l /^TXFrequency[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-g17=$(sed -nr "/^\[Info\]/ { :l /^Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-g18=$(sed -nr "/^\[Info\]/ { :l /^Power[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+g13=$(sed -nr "/^\[Info\]/ { :l /^Location[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+g14=$(sed -nr "/^\[Info\]/ { :l /^Description[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+g15=$(sed -nr "/^\[Info\]/ { :l /^URL[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+g16=$(sed -nr "/^\[Info\]/ { :l /^RXFrequency[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+g17=$(sed -nr "/^\[Info\]/ { :l /^TXFrequency[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+g18=$(sed -nr "/^\[Info\]/ { :l /^Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+g19=$(sed -nr "/^\[Info\]/ { :l /^Power[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 
-echo "G6 = $g6"
 
 exec 3>&1
 
-  dmrg=$(dialog  \
+  dmrg1=$(dialog  \
         --title "DMRGateway Sections - Page $GWPage" \
         --ok-label "Submit" \
 	--extra-button \
 	--extra-label "$elabel" \
         --backtitle "MMDVM Host Configurator - VE3RD" \
         --ascii-lines \
-        --mixedform "DMRGateway Configuration Items (Editable)" 0 50 0 \
-        "General"    	1 1 "General"  	1 15 35 0 2 \
-        "RuleTrace"    	2 1 "$g1"  	2 15 35 0 0 \
-        "StartNet"     	3 1 "$g2"     	3 15 35 0 0 \
-        "GWMode"       	4 1 "$g3"     	4 15 35 0 0 \
-        "Daemon"      	5 1 "$g4"     	5 15 35 0 0 \
-        "RFTimeout"   	6 1 "$g5"     	6 15 35 0 0 \
-        "NetTimeout"  	7 1 "$g6"     	7 15 35 0 0 \
-        "LOG"   	8 1 "LOG"     	8 15 35 0 2 \
-        "DisplayLevel"  9 1 "$g7"     	9 15 35 0 0 \
-        "File Level"  	10 1 "$g8"     	10 15 35 0 0 \
-        "FilePath"  	11 1 "$g9"     	11 15 35 0 0 \
-        "FileRoot"  	12 1 "$g10"     12 15 35 0 0 \
-        "INFO"  	13 1 "INFO"     13 15 35 0 2 \
-        "Latitude"  	14 1 "$g11"     14 15 35 0 0 \
-        "Longitude"  	15 1 "$g12"     15 15 35 0 0 \
-        "Location"  	16 1 "$g13"     16 15 35 0 0 \
-        "Description"  	17 1 "$g14"     17 15 35 0 0 \
-        "URL"  		18 1 "$g15"     18 15 35 0 0 \
-        "RXFrequency"  	19 1 "$g16"     19 15 35 0 0 \
-        "TXFrequency"  	20 1 "$g17"     20 15 35 0 0 \
-        "Enabled"  	21 1 "$g18"     21 15 35 0 0 \
-        "Power"  	22 1 "$g19"     22 15 35 0 0 2>&1 1>&3 )
+        --mixedform "DMRGateway Configuration Items\nItems marked -gw4 are only available in DMRGateway-4 by VE3RD" 30 70 30 \
+        "General"    		1 1 "General"  	1 22 35 0 2 \
+        "RuleTrace"    		2 1 "$g1"  	2 22 35 0 0 \
+        "StartNet -gw4"     	3 1 "$g2"     	3 22 35 0 0 \
+        "GWMode   -gw4"       	4 1 "$g3"     	4 22 35 0 0 \
+        "Daemon"      		5 1 "$g4"     	5 22 35 0 0 \
+        "RFTimeout"   		6 1 "$g5"     	6 22 35 0 0 \
+        "NetTimeout"  		7 1 "$g6"     	7 22 35 0 0 \
+        "LOG"   		8 1 "LOG"     	8 22 35 0 2 \
+        "DisplayLevel"  	9 1 "$g7"     	9 22 35 0 0 \
+        "File Level"  		10 1 "$g8"     	10 22 35 0 0 \
+        "FilePath"   		11 1 "$g9"     	11 22 35 0 0 \
+        "FileRoot"  		12 1 "$g10"     12 22 35 0 0 \
+        "INFO"  		13 1 "INFO"     13 22 35 0 2 \
+        "Latitude"  		14 1 "$g11"     14 22 35 0 0 \
+        "Longitude"  		15 1 "$g12"     15 22 35 0 0 \
+        "Location"  		16 1 "$g13"     16 22 35 0 0 \
+        "Description"  		17 1 "$g14"     17 22 35 0 0 \
+        "URL"  			18 1 "$g15"     18 22 35 0 0 \
+        "RXFrequency"  		19 1 "$g16"     19 22 35 0 0 \
+        "TXFrequency"  		20 1 "$g17"     20 22 35 0 0 \
+        "Enabled"  		21 1 "$g18"     21 22 35 0 0 \
+        "Power"  		22 1 "$g19"     22 22 35 0 0 \
+	2>&1 1>&3 )
 
 errorcode=$?
 
@@ -389,11 +717,94 @@ if [ $errorcode -eq 255 ]; then
 MenuMain
 fi
 
-exit
+RuleTrace=$(echo "$dmrg1" | sed -n '2p' )
+StartNet=$(echo "$dmrg1"  | sed -n '3p' )
+GWMode=$(echo "$dmrg1"  | sed -n '4p' )
+Daemon=$(echo "$dmrg1"  | sed -n '5p' )
+RFTimeout=$(echo "$dmrg1"  | sed -n '6p' )
+NetTimeout=$(echo "$dmrg1"  | sed -n '7p' )
+
+DisplayLevel=$(echo "$dmrg1"  | sed -n '9p' )
+FileLevel=$(echo "$dmrg1"  | sed -n '10p' )
+FilePath=$(echo "$dmrg1"  | sed -n '11p' )
+FileRoot=$(echo "$dmrg1"  | sed -n '12p' )
+
+Latitude=$(echo "$dmrg1"  | sed -n '14p' )
+Longitude=$(echo "$dmrg1"  | sed -n '15p' )
+Location=$(echo "$dmrg1"  | sed -n '16p' )
+Description=$(echo "$dmrg1"  | sed -n '17p' )
+URL=$(echo "$dmrg1"  | sed -n '18p' )
+RXFrequency=$(echo "$dmrg1"  | sed -n '19p' )
+TXFrequency=$(echo "$dmrg1"  | sed -n '20p' )
+Enabled=$(echo "$dmrg1"  | sed -n '21p' )
+Power=$(echo "$dmrg1"  | sed -n '22p' )
+
+if [ "$RuleTrace" != "$g1" ]; then
+        sudo sed -i '/^\[/h;G;/General]/s/\(RuleTrace=\).*/\1'"$RuleTrace"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$StartNet" != "$g2" ]; then
+        sudo sed -i '/^\[/h;G;/General]/s/\(StartNet=\).*/\1'"$StartNet"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$GWMode" != "$g3" ]; then
+        sudo sed -i '/^\[/h;G;/General]/s/\(GWMode=\).*/\1'"$GWMode"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Daemon" != "$g4" ]; then
+        sudo sed -i '/^\[/h;G;/General]/s/\(Daemon=\).*/\1'"$Daemon"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$RFTimeout" != "$g5" ]; then
+        sudo sed -i '/^\[/h;G;/General]/s/\(RFTimeout=\).*/\1'"$RFTimeout"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$NetTimeout" != "$g6" ]; then
+        sudo sed -i '/^\[/h;G;/General]/s/\(NetTimeout=\).*/\1'"$NetTimeout"'/m;P;d' /etc/dmrgateway
+fi
+##
+if [ "$DisplayLevelLevel" != "$g7" ]; then
+        sudo sed -i '/^\[/h;G;/Log]/s/\(DisplayLevel=\).*/\1'"$DisplayLevel"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$FileLevel" != "$g8" ]; then
+        sudo sed -i '/^\[/h;G;/Log]/s/\(FileLevel=\).*/\1'"$FileLevel"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$FilePath" != "$g9" ]; then
+  TO=$(echo "$FilePath" | sed "s/\//\\\\\//g")
+        sudo sed -i '/^\[/h;G;/Log]/s/\(FilePath=\).*/\1'"$TO"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$FileRoot" != "$g10" ]; then
+        sudo sed -i '/^\[/h;G;/Log]/s/\(FileRotate=\).*/\1'"$FileRotate"'/m;P;d' /etc/dmrgateway
+fi
+##
+if [ "$Latitude" != "$g11" ]; then
+        sudo sed -i '/^\[/h;G;/Info]/s/\(Latitude=\).*/\1'"$Latitude"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Longitude" != "$g12" ]; then
+        sudo sed -i '/^\[/h;G;/Info]/s/\(Longitude=\).*/\1'"$Longitude"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Location" != "$g13" ]; then
+        sudo sed -i '/^\[/h;G;/Info]/s/\(Location=\).*/\1'"$Location"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Description" != "$g14" ]; then
+        sudo sed -i '/^\[/h;G;/Info]/s/\(Description=\).*/\1'"$Description"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$URL" != "$g15" ]; then
+  TO=$(echo "$URL" | sed "s/\//\\\\\//g")
+        sudo sed -i '/^\[/h;G;/Info]/s/\(URL=\).*/\1'"$TO"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$RXFrequency" != "$g16" ]; then
+        sudo sed -i '/^\[/h;G;/Info]/s/\(RXFrequency=\).*/\1'"$RXFrequency"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$TXFrequency" != "$17" ]; then
+        sudo sed -i '/^\[/h;G;/Info]/s/\(TXFrequency=\).*/\1'"$TXFrequency"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Enabled" != "$18" ]; then
+        sudo sed -i '/^\[/h;G;/Info]/s/\(Enabled=\).*/\1'"$Enabled"'/m;P;d' /etc/dmrgateway
+fi
+if [ "$Power" != "$19" ]; then
+        sudo sed -i '/^\[/h;G;/Info]/s/\(Power=\).*/\1'"$Power"'/m;P;d' /etc/dmrgateway
+fi
+
 EditDMRGate
 
 }
-
+###################
 function EditLog(){
 #3
 echo "Setting Varibles"
@@ -454,9 +865,9 @@ if [ "$FileRotate" != "$l5" ]; then
         sudo sed -i '/^\[/h;G;/Log]/s/\(FileRotate=\).*/\1'"$FileRotate"'/m;P;d' /etc/mmdvmhost
 fi
 
-MenuMain
+EditLog
 }
-
+#########################
 function EditGeneral(){
 #1
 eg1=$(sed -nr "/^\[General\]/ { :l /Callsign[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
@@ -492,7 +903,10 @@ returncode=$?
 
 Callsign=$(echo "$Gen" | sed -n '1p')
 
-if [  $returncode -nq 0 ]; then 
+if [  $returncode -eq 0 ]; then 
+EditGeneral
+fi
+if [  $returncode -eq 1 ]; then 
 	dialog --ascii-lines --infobox "Cancel Selected - Function Aborted\nSleeping 2 seconds" 10 40 ; sleep 2
  	MenuMain
 fi
@@ -541,11 +955,7 @@ fi
 
 MenuMain
 }
-
-
-
-
-
+####################
 function EditModem(){
 #4
 
@@ -665,9 +1075,10 @@ if [ "$UARTSpeed" != "$mm15" ]; then
         sudo sed -i '/^\[/h;G;/Modem]/s/\(UARTSpeed=\).*/\1'"$UARTSpeed"'/m;P;d' /etc/mmdvmhost
 fi
 
-MenuMain
+EditModem
 }
 
+###############
 function EditDMR(){
 #5
 d1=$(sed -nr "/^\[DMR\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
@@ -770,9 +1181,10 @@ fi
 dialog --ascii-lines --infobox "DMR Data Write Complete " 10 30 ; sleep 1
 
 
-MenuMain
+EditDMR
 }
 
+######################
 function EditP25(){
 #6
 
@@ -935,9 +1347,9 @@ fi
 
 dialog --ascii-lines --infobox "P25 Data Write Complete " 10 30 ; sleep 1
 
-MenuMain
+EditP25
 }
-
+#######################
 function EditNXDN(){
 #7
 dialog \
@@ -949,6 +1361,7 @@ result=$?
 MenuMain
 
 }
+##############
 function EditYSF(){
 #8
 
@@ -990,9 +1403,6 @@ y23=$(sed -nr "/^\[Network\]/ { :l /Startup[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;
 #YSF Network
 y24=$(sed -nr "/^\[YSF Network\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/ysfgateway)
 y25=$(sed -nr "/^\[YSF Network\]/ { :l /Hosts[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/ysfgateway)
-
-
-
 
 returncode=0
 returncode=$?
@@ -1044,12 +1454,11 @@ dialog \
 	--title " Edit Nextion Sections "  \
 	--ascii-lines --msgbox " This function Under Construction\nData Writes Not Yet Enabled"  13 50
 
-MenuMain
+EditYSF
 
 }
-
-function MenuMaint()
-{
+###################
+function MenuMaint(){
 if [ ! -d /etc/backups ]; then
   mkdir /etc/backups
 fi
@@ -1100,32 +1509,45 @@ fi
 if [ "$MAINT" -eq 1 ]; then
 		dates=$(date +%F)
                 cp /etc/mmdvmhost /etc/backups/mmdvmhost"-$dates"
+		err1=$?
                 cp /etc/ysfgateway /etc/backups/ysfgateway"-$dates"
+		err2=$?
                 cp /etc/nxdngateway /etc/backups/nxdngateway"-$dates"
+		err3=$?
                 cp /etc/p25gateway /etc/backups/p25gateway"-$dates"
+		err4=$?
                 cp /etc/dmrgateway /etc/backups/dmrgateway"-$dates"
-        	dialog --ascii-lines --infobox "Backups Complete - Reloading Menu" 5 40 ; sleep 2
+		err5=$?
+errt=[[ $err1+$err2+$err3+$err4+$err5]]
+
+if [ $errt -gt 0 ]; then
+        	dialog --ascii-lines --infobox "Backups FAILED!!  - Reloading Menu" 5 40 ; sleep 2        	
+else
+		dialog --ascii-lines --infobox "Backups Complete - Reloading Menu" 5 40 ; sleep 2
+fi
 		MenuMaint
 fi
 if [ "$MAINT" -eq 2 ]; then
 
      F1=$(dialog \
         --ascii-lines \
-        --title "Select a file" \
+        --backtitle "MMDVM Host Configurator - VE3RD    -Tab Moves Cursor Between Areas -Tab Selects File" \
         --stdout \
         --title "Please choose a file" \
-        --fselect /etc/backups/ 14 48 )
+        --fselect /etc/backups/ 14 75 )
 
 	exitcode=$?
 
         if [ ! -z "$F1" ]; then
  		bf=$(echo "$F1" | cut -d "-" -f 1 )
 		fn=$(echo "$bf" | cut -d "/" -f 4 )	
-			dest='/etc/'
-	            	cp $bf $dest
+			dest="/etc/$fn"
+	            	cp $F1 $dest
 			err=$?
+#echo "Full File Name = $F1"
+#echo "S: $F1    D: $dest"
 		if [ $err -eq 0 ]; then
-			dialog --ascii-lines --infobox "Backup Config File $F1\nRestored to $dest$fn" 5 60 ; sleep 5
+			dialog --ascii-lines --infobox "Backup Config File $F1\nRestored to $dest" 5 60 ; sleep 5
 		else
 			dialog --ascii-lines --infobox "Restore Operation Failed" 5 40 ; sleep 2
 		
@@ -1165,7 +1587,7 @@ fi
 MenuMaint
 
 }
-
+################
 function EditNextion(){
 #10
 n1=$(sed -nr "/^\[Nextion\]/ { :l /Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
@@ -1361,7 +1783,7 @@ if [ "$SleepWhenInactive" != "$nd17" ]; then
 fi
         
 dialog --ascii-lines --infobox "Nextion Data Write Complete " 10 30 
-MenuMain
+EditNextion
 }
 
 function EditScreens(){
@@ -1374,7 +1796,7 @@ dialog \
 result=$?
 MenuMain
 }
-
+##########################
 function EditInfo(){
 #2
 RXF=$(sed -nr "/^\[Info\]/ { :l /RXFrequency[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
@@ -1421,9 +1843,6 @@ Location=$(echo "$Infod"  | sed -n '5p' )
 Description=$(echo "$Infod"  | sed -n '6p')
 URL=$(echo "$Infod"  | sed -n '7p' )
 
-
-
-
 ##  Write Values Back
 if [ "$RXFrequency" != "$RXF" ]; then
         sudo sed -i '/^\[/h;G;/Info]/s/\(RXFrequency=\).*/\1'"$RXFrequency"'/m;P;d' /etc/mmdvmhost
@@ -1449,62 +1868,71 @@ if [ "$URL" != "$URLs" ]; then
   sed -i "/^\[Info\]/,/^$/s/^URL=$FROM/URL=$TO/" /etc/mmdvmhost
 fi
 
-MenuMain
+EditInfo
 }
 
-
+###############################
 function MenuMain(){
 
-HEIGHT=25
-WIDTH=45
-CHOICE_HEIGHT=15
+
+echo "Starting Main Menu Dialog"
+HEIGHT=40
+WIDTH=60
+CHOICE_HEIGHT=35
 BACKTITLE="MMDVM Host Configurator - VE3RD"
 TITLE="Main Menu"
-MENU="Choose one of the following options\n --NYA Not Yet Available\n --UC Under Construction"
+MENU="Choose one of the following options:"
 
-OPTIONS=(1 "Edit General Section" 
-         2 "Edit Info Section" 
-         3 "Edit Log Section" 
-	 4 "Edit Modem Section" 
-         5 "Edit DMR Section" 
-         6 "Edit P25 Section" 
-         7 "Edit NXDN Section - UC" 
-         8 "Edit YSF Section - UC"
-	 9 "Edit Nextion Sections" 
-	10 "Edit Non Nextion Displays - NYA"
-	11 "Edit Edit Mode Enables - NYA" 
-	12 "Edit Mode Hangs - NYA" 
-	13 "Edit DMRGateway" 
-	14 "Maintenance & Backup/Restore" 
-	15 "Check - Set Modes and Enables" 
-	)
-#		--extra-button \
-#		--extra-label "Restart MMDVM" \
 
 CHOICE=$(dialog --clear \
-          	--ascii-lines \
-		--cancel-label "EXIT" \
-		--backtitle "$BACKTITLE" \
+                --ascii-lines \
+		--stdout \
+                --cancel-label "EXIT" \
+                --backtitle "$BACKTITLE" \
                 --title "$TITLE" \
                 --menu "$MENU" \
                 $HEIGHT $WIDTH $CHOICE_HEIGHT \
-                "${OPTIONS[@]}" \
-                2>&1 >/dev/tty)
-exitcode=$?
+          	1 "Edit General Section" \
+         	2 "Edit Info Section" \
+         	3 "Edit Log Section" \
+         	4 "Edit Modem Section" \
+         	5 "Edit DMR Section" \
+         	6 "Edit P25 Section" \
+         	7 "Edit NXDN Section - UC" \
+         	8 "Edit YSF Section - UC" \
+         	9 "Edit Nextion Sections" \
+        	10 "Edit Non Nextion Displays - NYA" \
+        	11 "Edit Edit Mode Enables - NYA" \
+        	12 "Edit Mode Hangs - NYA" \
+        	13 "Edit DMRGateway" \
+        	14 "Maintenance & Backup/Restore" \
+        	15 "Check - Set Modes and Enables" \
+        	16 "Start Test Funtion" 2>&1 )
+#>/dev/tty)
 
-if [ "$exitcode" -eq 3 ]; then
+#       "${OPTIONS[@]}" )
+#3 2>&1 1>&3 )
+#2>&1 >/dev/tty)
+
+exitcode=$?
+echo "ExitCode = $exitcode"
+echo "Choice = $CHOICE"
+
+
+if [ $exitcode -eq 3 ]; then
   mmdvmhost.service restart
 fi
-if [ "$exitcode" -eq 1 ]; then
+if [ $exitcode -eq 1 ]; then
         dialog --ascii-lines --infobox "Cancel Selected - Exiting Script\nSleeping 2 seconds" 5 40 ; sleep 2
          exit
    
 fi
 
-
 if [ -z "$CHOICE" ]; then
+        dialog --ascii-lines --infobox "Choice Box Empty - Exiting Script\nSleeping 2 seconds" 5 40 ; sleep 2
  exit
 fi
+
 
 case $CHOICE in
         1) EditGeneral ;;
@@ -1516,50 +1944,18 @@ case $CHOICE in
         7) EditNXDN ;;
         8) EditYSF ;;
         9) EditNextion ;;
-        10) EditScreen ;;
+        10) EditScreens ;;
         11) EditModeGroup ;;
         12) EditModeHangs ;;
         13) EditDMRGate ;;
         14) MenuMaint ;;
         15) CheckSetModes ;;
-	
+        16) EditDMRGateNet 1 ;;
 esac
 
 
 }
-
-
-function LoadMain(){
-
-m1=$(sed -nr "/^\[General\]/ { :l /Callsign[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-CallSign=$(echo "$m1" | tr '[:lower:]' '[:upper:]')
-
-if [ -z "$CallSign" ]; then
-        errtext=" Cancel Selected"
-	exitcode
-fi
-m2=$(sed -nr "/^\[P25\]/ { :l /Id[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-DID2="$m2"
-if [ -z "$DID2" ]; then
-        errtext=" Cancel Selected"
-	exitcode
-fi
-DID1=$(echo "$m2")
-
-HostName=$(hostname)
-
-extra="000000000"
-
-RXFrequency=$(sed -nr "/^\[Info\]/ { :l /RXFrequency[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-
-
-CheckMode
-
-Display=$(sed -nr "/^\[General\]/ { :l /Display[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-
-NetAddress=$(sed -nr "/^\[P25 Network\]/ { :l /Address[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-
-} 
+################
 
 function searchNetHost(){
 
@@ -1569,9 +1965,6 @@ declare -a SearchTxt=( $(dialog --title " P25 Server Search Utility" \
         --colors \
         --backtitle "MMDVM Host Configurator - VE3RD" \
         --inputbox "Enter your Search Criteria" 8 70  "tgif" 2>&1 >/dev/tty) )
-
-
-
 # get response
 response=$?
 
@@ -1592,7 +1985,10 @@ done < tmpfile
 }
 
 
+##########################    Start of Main Program #########
+echo "Staring Script"
 MenuMain
+#EditDMRGateNet 1
 #EditInfo
 #mmdvmhost.service restart
 
