@@ -41,7 +41,50 @@ function exitcode
 	dialog --title "  Programmed Exit  " --ascii-lines --msgbox "$txt" 8 78
 	tput setab 9 mode="" clear echo -e '\e[1;40m' run="Done" 
 exit
+###################
 }
+function Services(){
+MMDVM=$(pgrep MMDVMHost)
+DMRG=$(pgrep DMRGateway)
+P25G=$(pgrep P25Gateway)
+YSFG=$(pgrep YSFGateway)
+NXDNG=$(pgrep NXDNGateway)
+
+if [ -z $MMDVM ]; then MMDVM="Stopped" ; fi
+if [ -z $DMRG ]; then DMRG="Stopped" ; fi
+if [ -z $P25G ]; then P25G="Stopped" ; fi
+if [ -z $YSFG ]; then YSFG="Stopped" ; fi
+if [ -z $NXDNG ]; then NXDNG="Stopped" ; fi
+
+
+dialog  --ascii-lines \
+	--backtitle "MMDVM Host Configurator - VE3RD" \
+        --title "  Running Services  " \
+    	--mixedform " Check List - Display ONLY:" 20 40 12 \
+        "MMDVMHost" 	1 1 	"$MMDVM" 	1 15 20 0 2 \
+        "DMRGateway" 	2 1 	"$DMRG" 	2 15 20 0 2 \
+        "P25Gateway" 	3 1	"$P25G" 	3 15 20 0 2 \
+        "YSFGateway" 	4 1	"$YSFG" 	4 15 20 0 2 \
+        "NXDNGateway"	5 1	"$NXDNG" 	5 15 20 0 2 
+
+errorcode=$?
+
+if [ $errorcode -eq 1 ]; then
+        MenuMain1
+fi
+if [ $errorcode -eq 255 ]; then
+        MenuMainT
+fi
+
+
+
+MenuMaint
+exit
+}
+
+
+
+
 ##############
 function CheckSetModes(){
 md1=$(sed -nr "/^\[D-Star\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
@@ -144,9 +187,60 @@ fi
 CheckSetModes
 
 }
+
+function LogMon(){
+F1=$(dialog \
+        --ascii-lines \
+        --title "Select a file" \
+        --stdout \
+        --title "Please choose a file" \
+        --fselect /var/log/pi-star/ 30 0 )
+
+# delete file
+
+if [ $returncode -eq 1 ]; then
+        dialog --ascii-lines --infobox "Cancel Selected\nSleeping 2 seconds" 10 30 ; sleep 2
+   MenuMain
+fi
+if [ $returncode -eq 255 ]; then
+        dialog --ascii-lines --infobox "Cancel Selected\nSleeping 2 seconds" 10 30 ; sleep 2
+   MenuMain
+fi
+
+if [ ! -z "$F1" ]; then
+echo "File = $F1"
+else
+ echo " No File "
+  MenuMaint
+fi
+
+F2=$(dialog \
+        --ascii-lines \
+        --title "Select a file" \
+        --stdout \
+        --title "Please choose a file" \
+        --tailbox "$F1" 40 0 )
+
+if [ ! -z "$F1" ]; then
+echo "File = $F1"
+else
+ echo " No File "
+MenuMaint
+fi
+
+MenuMaint
+}
+
+
 #################
-function CheckDisplay(){ d=$(sed -nr "/^\[General\]/ { :l /Display[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost) d1="OFF" 
-d2="OFF" d3="OFF" d4="OFF" d5="OFF" d6="OFF"
+function CheckDisplay(){ 
+d=$(sed -nr "/^\[General\]/ { :l /Display[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost) 
+d1="OFF" 
+d2="OFF"
+d3="OFF" 
+d4="OFF" 
+d5="OFF" 
+d6="OFF"
 
 case "$d" in
   "None") d1="ON" ;;
@@ -1488,9 +1582,14 @@ MAINT=$(dialog --clear \
 		4 "Restart DMRGateway" \
 		5 "Restart ALL Services" \
 		6 "Reboot Hotspot" \
-		7 "Update Host Files" 2>&1 >/dev/tty)
+		7 "Update Host Files" \
+		8 "Log File Monitor" \
+		9 "Services" 2>&1 >/dev/tty)
 exitcode=$?
 
+if [ "$exitcode" -eq 1 ]; then
+   MenuMain
+fi
 if [ "$exitcode" -eq 3 ]; then
    MenuMain
 fi
@@ -1528,6 +1627,8 @@ else
 fi
 		MenuMaint
 fi
+
+
 if [ "$MAINT" -eq 2 ]; then
 
      F1=$(dialog \
@@ -1538,6 +1639,15 @@ if [ "$MAINT" -eq 2 ]; then
         --fselect /etc/backups/ 14 75 )
 
 	exitcode=$?
+	if [ $exitcode -eq 1 ]; then
+		dialog --ascii-lines --infobox "Cancel Selected\nFunction Aborted" 5 40 ; sleep 2
+		MenuMaint
+	fi
+	if [ $exitcode -eq 255 ]; then
+		dialog --ascii-lines --infobox "ESC Button Detected\nFunction Aborted" 5 40 ; sleep 2
+		MenuMaint
+	fi
+
 
         if [ ! -z "$F1" ]; then
  		bf=$(echo "$F1" | cut -d "-" -f 1 )
@@ -1545,8 +1655,8 @@ if [ "$MAINT" -eq 2 ]; then
 			dest="/etc/$fn"
 	            	cp $F1 $dest
 			err=$?
-#echo "Full File Name = $F1"
-#echo "S: $F1    D: $dest"
+	#echo "Full File Name = $F1"
+	#echo "S: $F1    D: $dest"
 		if [ $err -eq 0 ]; then
 			dialog --ascii-lines --infobox "Backup Config File $F1\nRestored to $dest" 5 60 ; sleep 5
 		else
@@ -1583,6 +1693,14 @@ if [ "$MAINT" -eq 7 ]; then
 echo "Updating All Host Files"
 echo "Please WAIT a few seconds"
 sudo HostFilesUpdate.sh
+fi
+
+if [ "$MAINT" -eq 8 ]; then
+LogMon
+fi
+
+if [ "$MAINT" -eq 9 ]; then
+Services
 fi
 
 MenuMaint
@@ -1877,7 +1995,7 @@ function MenuMain(){
 
 
 echo "Starting Main Menu Dialog"
-HEIGHT=40
+HEIGHT=25
 WIDTH=60
 CHOICE_HEIGHT=35
 BACKTITLE="MMDVM Host Configurator - VE3RD"
@@ -1886,8 +2004,8 @@ MENU="Choose one of the following options:"
 
 
 CHOICE=$(dialog --clear \
-                --ascii-lines \
 		--stdout \
+		--ascii-lines \
                 --cancel-label "EXIT" \
                 --backtitle "$BACKTITLE" \
                 --title "$TITLE" \
