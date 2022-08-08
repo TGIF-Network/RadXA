@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 ############################################################
 #  This script will automate the process of                #
 #  Configring MMDVMHost 		   	           #
@@ -257,9 +257,205 @@ function EditModeGroup(){
 	MenuMain
 }
 ############
-function EditModeHangs(){
-   dialog --ascii-lines --infobox "Not Yet Implemented - Sleeping 2 seconds" 10 40 ; sleep 2
-	MenuMain
+function EditTimers(){
+ds1=$(sed -nr "/^\[D-Star]/ { :l /^ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+ds2=$(sed -nr "/^\[D-Star Network]/ { :l /^ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+
+dm1=$(sed -nr "/^\[DMR]/ { :l /CallHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+dm2=$(sed -nr "/^\[DMR]/ { :l /TXHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+dm3=$(sed -nr "/^\[DMR]/ { :l /ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+dm4=$(sed -nr "/^\[DMR Network]/ { :l /ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+
+y1=$(sed -nr "/^\[System Fusion]/ { :l /^TXHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+y2=$(sed -nr "/^\[System Fusion]/ { :l /^ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+y3=$(sed -nr "/^\[System Fusion Network]/ { :l /^ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+
+P1=$(sed -nr "/^\[P25]/ { :l /^TXHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+P2=$(sed -nr "/^\[P25]/ { :l /^ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+P3=$(sed -nr "/^\[P25 Network]/ { :l /^ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+
+P4=$(sed -nr "/^\[Network]/ { :l /^RFHangTime[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/p25gateway)
+P5=$(sed -nr "/^\[Network]/ { :l /^NetHangTime[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/p25gateway)
+
+n1=$(sed -nr "/^\[NXDN]/ { :l /^TXHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+n2=$(sed -nr "/^\[NXDN]/ { :l /^ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+n3=$(sed -nr "/^\[NXDN Network]/ { :l /^ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+
+n4=$(sed -nr "/^\[Network]/ { :l /^RFHangTime[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/nxdngateway)
+n5=$(sed -nr "/^\[Network]/ { :l /^NetHangTime[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/nxdngateway)
+
+mm1=$(sed -nr "/^\[General]/ { :l /RFModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm2=$(sed -nr "/^\[General]/ { :l /NetModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+
+echo "RFModeHang - $mm1"
+echo "NetModeHang - $mm2"
+
+tim=$(dialog  --ascii-lines \
+	--stdout \
+        --backtitle "MMDVM Host Configurator - VE3RD" \
+        --title " RF / Net / ModeHang Timers  " \
+        --mixedform " Timers and ModeHangs " 0 40 0 \
+        "D-Star"   		1 1 "D-Star" 1 25 35 0 2 \
+        "ModeHang"       	2 3 "$ds1"   2 25 35 0 0 \
+        "Net ModeHang"		3 3 "$ds2"   3 25 35 0 0 \
+        "DMR"            	4 1 "DMR"    4 25 35 0 2 \
+        "CallHang"       	5 3 "$dm1"   5 25 35 0 0 \
+        "TXHang"      		6 3 "$dm2"   6 25 35 0 0 \
+        "ModeHang"          	7 3 "$dm3"   7 25 35 0 0 \
+        "NetModeHang"          	8 3 "$dm4"   8 25 35 0 0 \
+        "YSF"                   9 1 "YSF"    9 25 35 0 2 \
+        "TXHang"                10 3 "$y1"   10 25 35 0 0 \
+        "ModeHang"              11 3 "$y2"   11 25 35 0 0 \
+        "Net ModeHang"          12 3 "$y3"   12 25 35 0 0 \
+        "P25"                   13 1 "P25"   13 25 35 0 2 \
+        "TXHang"                14 3 "$P1"   14 25 35 0 0 \
+        "ModeHang"              15 3 "$P2"   15 25 35 0 0 \
+        "Net ModeHang"          16 3 "$P3"   16 25 35 0 0 \
+        "RFHangTime GW Net"     17 3 "$P4"   17 25 35 0 0 \
+        "NetHangTime GW Net"    18 3 "$P5"   18 25 35 0 0 \
+        "NXDN"                  19 1 "NXDN"  19 25 35 0 2 \
+        "TXHang"                20 3 "$n1"   20 25 35 0 0 \
+        "ModeHang"              21 3 "$n2"   21 25 35 0 0 \
+        "Net ModeHang"          22 3 "$n3"   22 25 35 0 0 \
+        "RFHangTime GW Net"     23 3 "$n4"   23 25 35 0 0 \
+	"NetHangTime GW Net"   	24 3 "$n5"   24 25 35 0 0 \
+        "MMDVM	"     		25 1 "MMDVM" 25 25 35 0 2 \
+        "RF ModeHang"     	26 3 "$mm1"  26 25 35 0 0 \
+	"Net ModeHang"   	27 3 "$mm2"  27 25 35 0 0 \
+)
+
+
+errorcode=$?
+echo  "Error Code = $errorcode"
+
+if [ $errorcode -eq 1 ]; then
+MenuMain
+fi
+if [ $errorcode -eq 255 ]; then
+MenuMain
+fi
+
+
+## 1
+dsMH=$(echo "$tim" | sed -n '2p' )
+dsNMH=$(echo "$tim"  | sed -n '3p' )
+## 4
+dmCHT=$(echo "$tim"  | sed -n '5p' )
+dmTXH=$(echo "$tim"  | sed -n '6p' )
+dmMH=$(echo "$tim"  | sed -n '7p' )
+dmNMH=$(echo "$tim"  | sed -n '8p' )
+## 9
+yTXH=$(echo "$tim"  | sed -n '10p' )
+yMH=$(echo "$tim"  | sed -n '11p' )
+yNMH=$(echo "$tim"  | sed -n '12p' )
+## 13
+p2TXH=$(echo "$tim"  | sed -n '14p' )
+p2MH=$(echo "$tim"  | sed -n '15p' )
+p2NMH=$(echo "$tim"  | sed -n '16p' )
+p2GRFHT=$(echo "$tim"  | sed -n '17p' )
+p2GNHT=$(echo "$tim"  | sed -n '18p' )
+## 19
+nxTXH=$(echo "$tim"  | sed -n '20p' )
+nxMH=$(echo "$tim"  | sed -n '21p' )
+nxNMH=$(echo "$tim"  | sed -n '22p' )
+nxGRFHT=$(echo "$tim"  | sed -n '23p' )
+nxGNHT=$(echo "$tim"  | sed -n '24p' )
+## 25
+mmRFMH==$(echo "$tim"  | sed -n '26p' )
+mmNMH=$(echo "$tim"  | sed -n '27p' )
+
+echo " DM1 $dmCHT"
+echo " DM2 $dmTXH"
+echo " DM3 $dmMH"
+echo " DM4 $dmNMH"
+
+
+#D-Star
+if [ "$dsMH" != "$ds1" ]; then
+  sed -i "/^\[D-Star\]/,/^$/s/^ModeHang=$ds1/ModeHang=$dsMH/" /etc/mmdvmhost
+fi
+if [ "$dsNMH" != "$ds2" ]; then
+  sed -i "/^\[D-Star Network\]/,/^$/s/^ModeHang=$ds2/ModeHang=$dsNMH/" /etc/mmdvmhost
+fi
+#DMR
+
+if [ "$dmCHT" != "$dm1" ]; then
+  sed -i "/^\[DMR\]/,/^$/s/CallHang=$dm1/CallHang=$dmCHT/" /etc/mmdvmhost
+fi
+if [ "$dmTXH" != "$dm2" ]; then
+  sed -i "/^\[DMR\]/,/^$/s/TXHang=$dm2/TXHang=$dmTXH/" /etc/mmdvmhost
+fi
+if [ "$dmMH" != "$dm3" ]; then
+  sed -i "/^\[DMR\]/,/^$/s/ModeHang=$dm3/ModeHang=$dmMH/" /etc/mmdvmhost
+fi
+if [ "$dmNMH" != "$dm4" ]; then
+  sed -i "/^\[DMR Network\]/,/^$/s/ModeHang=$dm4/ModeHang=$dmNMH/" /etc/mmdvmhost
+fi
+
+#YSF
+if [ "$yTXH" != "$y1" ]; then
+#       sed -i "/^\[System Fusion\]/,/^$/s/TXHang=$y1/TXHang=$yTXH/" /etc/mmdvmhost
+#        sudo sed -i '/^\[/h;G;/[System Fusion]/s/\(TXHang=\).*/\1'"$yTXH"'/m;P;d' /etc/mmdvmhost
+  sudo sed -i '/^\[/h;G;/System Fusion]/s/\(^TXHang=\).*/\1'"$yTXH"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$yMH" != "$y2" ]; then
+#  sed -i "/^\[System Fusion\]/,/^$/s/ModeHang=$y2/ModeHang=$yMH/" /etc/mmdvmhost
+#        sudo sed -i '/^\[/h;G;/[System Fusion]/s/\(ModeHang=\).*/\1'"$yMH"'/m;P;d' /etc/mmdvmhost
+sudo sed -i '/^\[/h;G;/System Fusion]/s/\(^ModeHang=\).*/\1'"$yMH"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$yNMH" != "$y3" ]; then
+sudo sed -i '/^\[/h;G;/System Fusion Network]/s/\(^ModeHang=\).*/\1'"$yNMH"'/m;P;d' /etc/mmdvmhost
+fi
+
+
+#sudo sed -i '/^\[/h;G;/System Fusion Network]/s/\(^ModeHang=\).*/\1'"$yNMH"'/m;P;d' /etc/mmdvmhost
+#P25
+if [ "$p2TXH" != "$P1" ]; then
+sudo sed -i '/^\[/h;G;/P25]/s/\(^TXHang=\).*/\1'"$p2TXH"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$p2MH" != "$P2" ]; then
+sudo sed -i '/^\[/h;G;/P25]/s/\(^ModeHang=\).*/\1'"$p2MH"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$p2NMH" != "$P3" ]; then
+sudo sed -i '/^\[/h;G;/P25 Network]/s/\(^ModeHang=\).*/\1'"$p2NMH"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$p2GRFHT" != "$P4" ]; then
+sudo sed -i '/^\[/h;G;/Network]/s/\(^RFHangTime=\).*/\1'"$p2GRFHT"'/m;P;d' /etc/p25gateway
+fi
+if [ "$p2GNHT" != "$P5" ]; then
+sudo sed -i '/^\[/h;G;/Network]/s/\(^NetHangTime=\).*/\1'"$p2GNHT"'/m;P;d' /etc/p25gateway
+fi
+
+
+#NXDN
+if [ "$nxTXH" != "$n1" ]; then
+sudo sed -i '/^\[/h;G;/NXDN]/s/\(^TXHang=\).*/\1'"$nxTXH"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$nxMH" != "$n2" ]; then
+sudo sed -i '/^\[/h;G;/NXDN]/s/\(^ModeHang=\).*/\1'"$nxMH"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$nxNMH" != "$n3" ]; then
+sudo sed -i '/^\[/h;G;/NXDN Network]/s/\(^ModeHang=\).*/\1'"$nxNMH"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$nxGRFHT" != "$n4" ]; then
+sudo sed -i '/^\[/h;G;/Network]/s/\(^RFHangTime=\).*/\1'"$nxGRFHT"'/m;P;d' /etc/nxdngateway
+fi
+if [ "$nxGNHT" != "$n5" ]; then
+sudo sed -i '/^\[/h;G;/Network]/s/\(^NetHangTime=\).*/\1'"$nxGNHT"'/m;P;d' /etc/nxdngateway
+fi
+
+#MMDVM
+if [ "$mmRFMH" != "$mm1" ]; then
+sudo sed -i '/^\[/h;G;/General]/s/\(^RFModeHang=\).*/\1'"$mmRFMH"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$mmNMH" != "$mm2" ]; then
+sudo sed -i '/^\[/h;G;/General]/s/\(^NetModeHang=\).*/\1'"$mmNMH"'/m;P;d' /etc/mmdvmhost
+fi
+
+
+dialog --ascii-lines --infobox "Data Write Complete - Sleeping 2 seconds" 10 40 ; sleep 2
+
+EditTimers
 }
 #############
 
@@ -269,17 +465,17 @@ echo "$N"
 sect="DMR Network $N"
 echo "Section = $sect"
 
-dm1a=$(sed -nr "/^\[$sect/ { :l /^Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm2a=$(sed -nr "/^\[$sect/ { :l /^Name[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm3a=$(sed -nr "/^\[$sect/ { :l /^Id[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm4a=$(sed -nr "/^\[$sect/ { :l /^Address[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm5a=$(sed -nr "/^\[$sect/ { :l /^Password[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm6a=$(sed -nr "/^\[$sect/ { :l /^Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm7a=$(sed -nr "/^\[$sect/ { :l /^Local[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm8a=$(sed -nr "/^\[$sect/ { :l /^TGRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm9a=$(sed -nr "/^\[$sect1/ { :l /^TGRewrite1[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm10a=$(sed -nr "/^\[$sect/ { :l /^PCRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm11a=$(sed -nr "/^\[$sect/ { :l /^SrcRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm1a=$(sed -nr "/^\[$sect]/ { :l /^Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm2a=$(sed -nr "/^\[$sect]/ { :l /^Name[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm3a=$(sed -nr "/^\[$sect]/ { :l /^Id[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm4a=$(sed -nr "/^\[$sect]/ { :l /^Address[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm5a=$(sed -nr "/^\[$sect]/ { :l /^Password[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm6a=$(sed -nr "/^\[$sect]/ { :l /^Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm7a=$(sed -nr "/^\[$sect]/ { :l /^Local[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm8a=$(sed -nr "/^\[$sect]/ { :l /^TGRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm9a=$(sed -nr "/^\[$sect1]/ { :l /^TGRewrite1[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm10a=$(sed -nr "/^\[$sect]/ { :l /^PCRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm11a=$(sed -nr "/^\[$sect]/ { :l /^SrcRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 
 exec 3>&1
 
@@ -314,12 +510,7 @@ MenuMain
 fi
 
 if [ $errorcode -eq 3 ]; then
- 	indx=$[indx + 1]
-##	if (( $indx > 0 )) && (( $indx < 7 )); then
-	if [ $indx > 0 ] && [ $indx < 7 ]; then
-		(( indx=1 ))
-	fi
-	EditDMRGateNet "$indx"       
+	EditTimers       
 fi
 
 if [ $errorcode -eq 0 ] ; then
@@ -415,41 +606,41 @@ EditDMRGateNet 2
 
 # sed -nr "/^\[$Sect2/ 
 
-dm1a=$(sed -nr "/^\[$Sect1/ { :l /^Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm2a=$(sed -nr "/^\[$Sect1/ { :l /^Name[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm3a=$(sed -nr "/^\[$Sect1/ { :l /^Id[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm4a=$(sed -nr "/^\[$Sect1/ { :l /^Address[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm5a=$(sed -nr "/^\[$Sect1/ { :l /^Password[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm6a=$(sed -nr "/^\[$Sect1/ { :l /^Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm7a=$(sed -nr "/^\[$Sect1/ { :l /^Local[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm8a=$(sed -nr "/^\[$Sect1/ { :l /^TGRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm9a=$(sed -nr "/^\[$Sect1/ { :l /^TGRewrite1[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm10a=$(sed -nr "/^\[$Sect1/ { :l /^PCRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm11a=$(sed -nr "/^\[$Sect1/ { :l /^SrcRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm1a=$(sed -nr "/^\[$Sect1]/ { :l /^Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm2a=$(sed -nr "/^\[$Sect1]/ { :l /^Name[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm3a=$(sed -nr "/^\[$Sect1]/ { :l /^Id[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm4a=$(sed -nr "/^\[$Sect1]/ { :l /^Address[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm5a=$(sed -nr "/^\[$Sect1]/ { :l /^Password[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm6a=$(sed -nr "/^\[$Sect1]/ { :l /^Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm7a=$(sed -nr "/^\[$Sect1]/ { :l /^Local[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm8a=$(sed -nr "/^\[$Sect1]/ { :l /^TGRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm9a=$(sed -nr "/^\[$Sect1]/ { :l /^TGRewrite1[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm10a=$(sed -nr "/^\[$Sect1]/ { :l /^PCRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm11a=$(sed -nr "/^\[$Sect1]/ { :l /^SrcRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 
-dm1b=$(sed -nr "/^\[$Sect2/ { :l /^Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm2b=$(sed -nr "/^\[$Sect2/ { :l /^Name[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm3b=$(sed -nr "/^\[$Sect2/ { :l /^Id[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm4b=$(sed -nr "/^\[$Sect2/ { :l /^Address[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm5b=$(sed -nr "/^\[$Sect2/ { :l /^Password[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm6b=$(sed -nr "/^\[$Sect2/ { :l /^Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm7b=$(sed -nr "/^\[$Sect2/ { :l /^Local[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm8b=$(sed -nr "/^\[$Sect2/ { :l /^TGRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm9b=$(sed -nr "/^\[$Sect2/ { :l /^TGRewrite1[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm10b=$(sed -nr "/^\[$Sect2/ { :l /^PCRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm11b=$(sed -nr "/^\[$Sect2/ { :l /^SrcRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm1b=$(sed -nr "/^\[$Sect2]/ { :l /^Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm2b=$(sed -nr "/^\[$Sect2]/ { :l /^Name[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm3b=$(sed -nr "/^\[$Sect2]/ { :l /^Id[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm4b=$(sed -nr "/^\[$Sect2]/ { :l /^Address[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm5b=$(sed -nr "/^\[$Sect2]/ { :l /^Password[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm6b=$(sed -nr "/^\[$Sect2]/ { :l /^Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm7b=$(sed -nr "/^\[$Sect2]/ { :l /^Local[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm8b=$(sed -nr "/^\[$Sect2]/ { :l /^TGRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm9b=$(sed -nr "/^\[$Sect2]/ { :l /^TGRewrite1[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm10b=$(sed -nr "/^\[$Sect2]/ { :l /^PCRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm11b=$(sed -nr "/^\[$Sect2]/ { :l /^SrcRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 
-dm1c=$(sed -nr "/^\[$Sect3/ { :l /^Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm2c=$(sed -nr "/^\[$Sect3/ { :l /^Name[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm3c=$(sed -nr "/^\[$Sect3/ { :l /^Id[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm4c=$(sed -nr "/^\[$Sect3/ { :l /^Address[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm5c=$(sed -nr "/^\[$Sect3/ { :l /^Password[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm6c=$(sed -nr "/^\[$Sect3/ { :l /^Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm7c=$(sed -nr "/^\[$Sect3/ { :l /^Local[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm8c=$(sed -nr "/^\[$Sect3/ { :l /^TGRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm9c=$(sed -nr "/^\[$Sect3/ { :l /^TGRewrite1[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm10c=$(sed -nr "/^\[$Sect3/ { :l /^PCRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm11c=$(sed -nr "/^\[$Sect3/ { :l /^SrcRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm1c=$(sed -nr "/^\[$Sect3]/ { :l /^Enabled[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm2c=$(sed -nr "/^\[$Sect3]/ { :l /^Name[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm3c=$(sed -nr "/^\[$Sect3]/ { :l /^Id[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm4c=$(sed -nr "/^\[$Sect3]/ { :l /^Address[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm5c=$(sed -nr "/^\[$Sect3]/ { :l /^Password[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm6c=$(sed -nr "/^\[$Sect3]/ { :l /^Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm7c=$(sed -nr "/^\[$Sect3]/ { :l /^Local[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm8c=$(sed -nr "/^\[$Sect3]/ { :l /^TGRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm9c=$(sed -nr "/^\[$Sect3]/ { :l /^TGRewrite1[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm10c=$(sed -nr "/^\[$Sect3]/ { :l /^PCRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm11c=$(sed -nr "/^\[$Sect3]/ { :l /^SrcRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 
 
 exec 3>&1
@@ -2155,8 +2346,8 @@ CHOICE=$(dialog --clear \
          	8 "Edit YSF Section" \
          	9 "Edit Nextion Sections" \
         	10 "Edit Non Nextion Displays - NYA" \
-        	11 "Edit Edit Mode Enables - NYA" \
-        	12 "Edit Mode Hangs - NYA" \
+        	11 "Edit TBA - NYA" \
+        	12 "Edit Timers" \
         	13 "Edit DMRGateway" \
         	14 "Maintenance & Backup/Restore" \
         	15 "Check - Set Modes and Enables" \
@@ -2168,8 +2359,8 @@ CHOICE=$(dialog --clear \
 #2>&1 >/dev/tty)
 
 exitcode=$?
-echo "ExitCode = $exitcode"
-echo "Choice = $CHOICE"
+#echo "ExitCode = $exitcode"
+#echo "Choice = $CHOICE"
 
 
 if [ $exitcode -eq 3 ]; then
@@ -2199,7 +2390,7 @@ case $CHOICE in
         9) EditNextion ;;
         10) EditScreens ;;
         11) EditModeGroup ;;
-        12) EditModeHangs ;;
+        12) EditTimers ;;
         13) EditDMRGate ;;
         14) MenuMaint ;;
         15) CheckSetModes ;;
