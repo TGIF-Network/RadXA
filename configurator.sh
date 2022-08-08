@@ -1643,13 +1643,167 @@ EditP25
 #######################
 function EditNXDN(){
 #7
-dialog \
-        --backtitle "MMDVM Host Configurator - VE3RD" \
-	--title " Edit Nextion Sections "  \
-	--ascii-lines --msgbox " This function not yet impemented" 13 50
+#P25 Section
+nd1=$(sed -nr "/^\[NXDN\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+nd2=$(sed -nr "/^\[NXDN\]/ { :l /RAN[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+nd3=$(sed -nr "/^\[NXDN\]/ { :l /ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+nd4=$(sed -nr "/^\[NXDN\]/ { :l /TXHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+#NXDN Network
+nd5=$(sed -nr "/^\[NXDN Network\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+nd6=$(sed -nr "/^\[NXDN Network\]/ { :l /ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 
-result=$?
-MenuMain
+#NXDN Gateway 
+# Network Section
+nd7=$(sed -nr "/^\[General\]/ { :l /Callsign[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/nxdngateway)
+nd8=$(sed -nr "/^\[Log\]/ { :l /FilePath[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/nxdngateway)
+nd9=$(sed -nr "/^\[Log\]/ { :l /DisplayLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/nxdngateway)
+nd10=$(sed -nr "/^\[Log\]/ { :l /FileLevel[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/nxdngateway)
+nd11=$(sed -nr "/^\[Network\]/ { :l /HostsFile1[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/nxdngateway)
+nd12=$(sed -nr "/^\[Network\]/ { :l /HostsFile2[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/nxdngateway)
+nd13=$(sed -nr "/^\[Network\]/ { :l /NXDN2DMRAddress[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/nxdngateway)
+nd14=$(sed -nr "/^\[Network\]/ { :l /NXDN2DMRPort[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/nxdngateway)
+nd15=$(sed -nr "/^\[Network\]/ { :l /Static[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/nxdngateway)
+nd16=$(sed -nr "/^\[Network\]/ { :l /RFHangTime[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/nxdngateway)
+nd17=$(sed -nr "/^\[Network\]/ { :l /NetHangTime[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/nxdngateway)
+
+
+returncode=0
+returncode=$?
+exec 3>&1
+
+
+nxdnd=$(dialog  --ascii-lines \
+        --backtitle "MMDVM Host Configurator - VE3RD" \
+        --separate-widget  $'\n'   \
+        --ok-label "Save" \
+        --title "nxdn Section" \
+        --mixedform "\n NXDN Configuration Items (Editable)" 30 70 25\
+        "NXDN General"     	1 1 "General"  	1 25 35 0 2 \
+        "Enable"        	2 3 "$nd1"  	2 25 35 0 0 \
+        "RAN"           	3 3 "$nd2"  	3 25 35 0 0 \
+        "ModeHang"      	4 3 "$nd3"  	4 25 35 0 0 \
+        "TXHang"        	5 3 "$nd4"  	5 25 35 0 0 \
+        "NXDN Network"   	6 1 "Network" 	6 25 35 0 2 \
+        "Enable"        	7 3 "$nd5"  	7 25 35 0 0 \
+        "ModeHang"      	8 3 "$nd6"  	8 25 35 0 0 \
+        "nxdnGateway General"   	9 1 "General"  	9 25 35 0 2 \
+        "Callsign"             10 3 "$nd7"      10 25 35 0 0 \
+        "nxdnGateway Log"       11 1 "Log"      11 25 35 0 2 \
+        "FilePath"             12 3 "$nd8"      12 25 35 0 0 \
+        "DisplayLevel"         13 3 "$nd9"      13 25 35 0 0 \
+        "FileLevel"            14 3 "$nd10"     14 25 35 0 0 \
+        "NXDN Gateway Network"   15 1 "Network"  15 25 35 0 2 \
+        "HostsFile1"           16 3 "$nd11"     16 25 35 0 0 \
+        "HostsFile2"           17 3 "$nd12"     17 25 35 0 0 \
+        "NXDN2DMRAddress"       18 3 "$nd13"     18 25 35 0 0 \
+        "NXDN2DMRPort"          19 3 "$nd14"     19 25 35 0 0 \
+        "Static Talk Group"    20 3 "$nd15"     20 25 35 0 0 \
+        "RFHangTime"           21 3 "$nd16"     21 25 35 0 0 \
+        "NetHangTime"          22 3 "$nd17"     22 25 35 0 0 \
+ 	2>&1 1>&3)
+
+returncode=$?
+
+if [ $returncode -eq 1 ]; then
+        dialog --ascii-lines --infobox "Cancel Selected - Function Aborted!" 5 60
+	MenuMain
+fi
+if [ $returncode -eq 0 ]; then
+        dialog --ascii-lines --infobox "nxdn Updating nxdn Parameters" 5 60
+fi
+
+Enable1=$(echo "$nxdnd" | sed -n '2p')
+RAN=$(echo "$nxdnd" | sed -n '3p')
+ModeHang1=$(echo "$nxdnd" | sed -n '4p')
+TXHang1=$(echo "$nxdnd" | sed -n '5p')
+
+#nxdn Network
+Enable2=$(echo "$nxdnd" | sed -n '7p')
+ModeHang2=$(echo "$nxdnd" | sed -n '8p')
+
+#nxdnGateway General
+Callsign=$(echo "$nxdnd" | sed -n '10p')
+
+#nxdnGateway Log
+FilePath=$(echo "$nxdnd" | sed -n '12p')
+DisplayLevel=$(echo "$nxdnd" | sed -n '13p')
+FileLevel=$(echo "$nxdnd" | sed -n '14p')
+
+#nxdnGateway Network
+HostsFile1=$(echo "$nxdnd" | sed -n '16p')
+HostsFile2=$(echo "$nxdnd" | sed -n '17p')
+NXDN2DMRAddress=$(echo "$nxdnd" | sed -n '18p')
+NXDN2DMRPort=$(echo "$nxdnd" | sed -n '19p')
+Static=$(echo "$nxdnd" | sed -n '20p')
+RFHangTime=$(echo "$nxdnd" | sed -n '21p')
+NetHangTime=$(echo "$nxdnd" | sed -n '22p')
+
+
+if [ "$Enable" != "$nd1" ]; then
+        sudo sed -i '/^\[/h;G;/NXDN]/s/\(Enable=\).*/\1'"$Enable1"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$RAN" != "$nd2" ]; then
+        sudo sed -i '/^\[/h;G;/NXDN]/s/\(RAN=\).*/\1'"$RAN"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$ModeHang" != "$nd3" ]; then
+        sudo sed -i '/^\[/h;G;/NXDN]/s/\(ModeHang=\).*/\1'"$ModeHang1"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$TXHang" != "$nd4" ]; then
+        sudo sed -i '/^\[/h;G;/NXDN]/s/\(TXHang=\).*/\1'"$TXHang1"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$Enable" != "$nd5" ]; then
+        sudo sed -i '/^\[/h;G;/NXDN Network]/s/\(Enable=\).*/\1'"$Enable2"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$ModeHang" != "$nd6" ]; then
+        sudo sed -i '/^\[/h;G;/NXDN Network]/s/\(ModeHang=\).*/\1'"$ModeHang2"'/m;P;d' /etc/mmdvmhost
+fi
+if [ "$Callsign" != "$nd7" ]; then
+        sudo sed -i '/^\[/h;G;/General]/s/\(Callsign=\).*/\1'"$Callsign"'/m;P;d' /etc/nxdngateway
+fi
+
+if [ "$FilePath" != "$nd8" ]; then
+  FROM=$(echo "$nd8" | sed "s/\//\\\\\//g")
+  TO=$(echo "$FilePath" | sed "s/\//\\\\\//g")
+  sed -i "/^\[Log\]/,/^$/s/^FilePath=$FROM/FilePath=$TO/" /etc/nxdngateway
+fi
+if [ "$DisplayLevel" != "$nd9" ]; then
+        sudo sed -i '/^\[/h;G;/Log]/s/\(DisplayLevel=\).*/\1'"$DisplayLevel"'/m;P;d' /etc/nxdngateway
+fi
+
+if [ "$FileLevel" != "$nd10" ]; then
+        sudo sed -i '/^\[/h;G;/Log]/s/\(FileLevel=\).*/\1'"$FileLevel"'/m;P;d' /etc/nxdngateway
+fi
+
+if [ "$HostsFile1" != "$nd11" ]; then
+  FROM=$(echo "$nd11" | sed "s/\//\\\\\//g")
+  TO=$(echo "$HostsFile1" | sed "s/\//\\\\\//g")
+  sed -i "/^\[Network\]/,/^$/s/^HostsFile1=$FROM/HostsFile1=$TO/" /etc/nxdngateway
+fi
+if [ "$HostsFile2" != "$nd12" ]; then
+  FROM=$(echo "$nd12" | sed "s/\//\\\\\//g")
+  TO=$(echo "$HostsFile2" | sed "s/\//\\\\\//g")
+  sed -i "/^\[Network\]/,/^$/s/^HostsFile2=$FROM/HostsFile2=$TO/" /etc/nxdngateway
+fi
+if [ "$NXDN2DMRAddress" != "$nd13" ]; then
+        sudo sed -i '/^\[/h;G;/Network]/s/\(NXDN2DMRAddress=\).*/\1'"$NXDN2DMRAddress"'/m;P;d' /etc/nxdngateway
+fi
+if [ "$NXDN2DMRPort" != "$nd14" ]; then
+        sudo sed -i '/^\[/h;G;/Network]/s/\(NXDN2DMRPort=\).*/\1'"$NXDN2DMRPort"'/m;P;d' /etc/nxdngateway
+fi
+if [ "$Static" != "$nd15" ]; then
+        sudo sed -i '/^\[/h;G;/Network]/s/\(Static=\).*/\1'"$Static"'/m;P;d' /etc/nxdngateway
+fi
+if [ "$RFHangTime" != "$nd16" ]; then
+        sudo sed -i '/^\[/h;G;/Network]/s/\(RFHangTime=\).*/\1'"$RFHangTime"'/m;P;d' /etc/nxdngateway
+fi
+if [ "$NetHangTime" != "$nd17" ]; then
+        sudo sed -i '/^\[/h;G;/Network]/s/\(NetHangTime=\).*/\1'"$NetHangTime"'/m;P;d' /etc/nxdngateway
+fi
+
+
+dialog --ascii-lines --infobox "NXDN Data Write Complete " 5 30 ; sleep 1
+
+EditNXDN
 
 }
 ##############
@@ -1829,7 +1983,7 @@ fi
 if [ "$Id" != "$y10" ]; then
         sudo sed -i '/^\[/h;G;/General]/s/\(Id=\).*/\1'"$Id"'/m;P;d' /etc/ysfgateway
 fi
-if [ "$Daemon" != "$y11" ]; then
+if [ "$ndaemon" != "$y11" ]; then
         sudo sed -i '/^\[/h;G;/General]/s/\(Daemon=\).*/\1'"$Daemon"'/m;P;d' /etc/ysfgateway
 fi
 ##
@@ -2346,7 +2500,7 @@ CHOICE=$(dialog --clear \
          	4 "Edit Modem Section" \
          	5 "Edit DMR Section" \
          	6 "Edit P25 Section" \
-         	7 "Edit NXDN Section - UC" \
+         	7 "Edit NXDN Section" \
          	8 "Edit YSF Section" \
          	9 "Edit Nextion Sections" \
         	10 "Edit Non Nextion Displays - NYA" \
