@@ -1189,20 +1189,17 @@ returncode=$?
 
 Callsign=$(echo "$Gen" | sed -n '1p')
 
-if [  $returncode -eq 0 ]; then 
-EditGeneral
-fi
 if [  $returncode -eq 1 ]; then 
 	dialog --ascii-lines --infobox "Cancel Selected - Function Aborted\nSleeping 2 seconds" 10 40 ; sleep 2
  	MenuMain
 fi
 
 if [ -z "$Callsign" ]; then 
-        dialog --ascii-lines --infobox " No Call Sign - Function Aborted\nSleeping 2 seconds" 10 40 ; sleep 2
+        dialog --ascii-lines --infobox " No Data Detected - Function Aborted\nSleeping 2 seconds" 10 40 ; sleep 2
         MenuMain
 fi
 
-
+Callsign=$(echo "$Gen" | sed -n '1p')
 Id=$(echo "$Gen" | sed -n '2p' )
 Timeout=$(echo "$Gen"  | sed -n '3p' )
 Duplex=$(echo "$Gen"  | sed -n '4p' )
@@ -1211,13 +1208,18 @@ NetModeHang=$(echo "$Gen"  | sed -n '6p')
 Display=$(echo "$Gen"  | sed -n '7p' )
 Daemon=$(echo "$Gen" | sed -n '8p' )
 
+echo "Callsign1 $eg1:$Callsign"
 
 ##  Write Values Back
 if [ "$Callsign" != "$eg1" ]; then 
         sudo sed -i '/^\[/h;G;/General]/s/\(Callsign=\).*/\1'"$Callsign"'/m;P;d' /etc/mmdvmhost
+echo "Callsign2 $eg1:$Callsign"
 fi
+echo "Callsign3 $eg1:$Callsign"
+
+
 if [ "$Id" != "$eg2" ]; then 
-        sudo sed -i '/^\[/h;G;/General]/s/\(Id=\).*/\1'"$Id"'/m;P;d' /etc/mmdvmhost
+	sudo sed -i '/^\[/h;G;/General]/s/\(Id=\).*/\1'"$Id"'/m;P;d' /etc/mmdvmhost
 fi
 if [ "$Timeout" != "$eg3" ]; then 
         sudo sed -i '/^\[/h;G;/General]/s/\(Timeout=\).*/\1'"$Timeout"'/m;P;d' /etc/mmdvmhost
@@ -1238,14 +1240,13 @@ if [ "$Daemon" != "$eg8" ]; then
         sudo sed -i '/^\[/h;G;/General]/s/\(Daemon=\).*/\1'"$Daemon"'/m;P;d' /etc/mmdvmhost
 fi
   
-
-MenuMain
+EditGeneral
 }
 ####################
 function EditModem(){
 #4
 
-mm1=$(sed -nr "/^\[Modem\]/ { :l /^Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+mm1=$(sed -nr "/^\[Modem\]/ { :l /^^Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 mm2=$(sed -nr "/^\[Modem\]/ { :l /^TXDelay[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 mm3=$(sed -nr "/^\[Modem\]/ { :l /^RXOffset[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 mm4=$(sed -nr "/^\[Modem\]/ { :l /^TXOffset[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
@@ -1297,6 +1298,8 @@ fi
 if [  $returncode -eq 255 ]; then 
  	MenuMain
 fi
+echo "Ports  $mm1 :  $Port"
+exit
 
 Port=$(echo "$Modems" | sed -n '1p' )
 TXDelay=$(echo "$Modems" | sed -n '2p' )
@@ -1318,7 +1321,7 @@ if [ "$Port" != "$mm1" ]; then
         sudo sed -i '/^\[/h;G;/Modem]/s/\(Port=\).*/\1'"$Port"'/m;P;d' /etc/mmdvmhost
 fi
 if [ "$TXDelay" != "$mm2" ]; then
-        sudo sed -i '/^\[/h;G;/Modem]/s/\(Port=\).*/\1'"$Port"'/m;P;d' /etc/mmdvmhost
+        sudo sed -i '/^\[/h;G;/Modem]/s/\(TXDelay=\).*/\1'"$TXDelay"'/m;P;d' /etc/mmdvmhost
 fi
 if [ "$RXOffset" != "$mm3" ]; then
         sudo sed -i '/^\[/h;G;/Modem]/s/\(RXOffset=\).*/\1'"$RXOffset"'/m;P;d' /etc/mmdvmhost
@@ -1400,7 +1403,7 @@ DMRs=$(dialog  --ascii-lines \
         "ModeHang"  	9 1 "$d7" 	 	9 25 35 0 0 \
         "Type"         10 1 "$d8" 	       10 25 35 0 0 \
         "Port"         11 1 "$d9" 	       11 25 35 0 0 \
-        "LocalPort"    10 1 "$d10"	       12 25 35 0 0 \
+        "LocalPort"    12 1 "$d10"	       12 25 35 0 0 \
          2>&1 1>&3 )
 
 returncode=$?
@@ -1416,16 +1419,17 @@ fi
 
 
 
-Enable=$(echo "$DMRs" | sed -n '1p' )
-CallHang=$(echo "$DMRs" | sed -n '2p' )
-TXHang=$(echo "$DMRs"  | sed -n '3p' )
-Id=$(echo "$DMRs"  | sed -n '4p' )
-NetEnable=$(echo "$DMRs"  | sed -n '5p' )
-NetAddress=$(echo "$DMRs"  | sed -n '6p')
-NetModeHang=$(echo "$DMRs"  | sed -n '7p' )
-NetType=$(echo "$DMRs" | sed -n '8p' )
-NetPort=$(echo "$DMRs" | sed -n '9p' )
-NetLocalPort=$(echo "$DMRs" | sed -n '10p' )
+Enable=$(echo "$DMRs" | sed -n '2p' )
+CallHang=$(echo "$DMRs" | sed -n '3p' )
+TXHang=$(echo "$DMRs"  | sed -n '4p' )
+Id=$(echo "$DMRs"  | sed -n '5p' )
+### 6
+NetEnable=$(echo "$DMRs"  | sed -n '7p' )
+NetAddress=$(echo "$DMRs"  | sed -n '8p')
+NetModeHang=$(echo "$DMRs"  | sed -n '9p' )
+NetType=$(echo "$DMRs" | sed -n '10p' )
+NetPort=$(echo "$DMRs" | sed -n '11p' )
+NetLocalPort=$(echo "$DMRs" | sed -n '12p' )
 
 
 ##  Write Values Back
@@ -1536,11 +1540,11 @@ P25d=$(dialog  --ascii-lines \
 returncode=$?
 
 if [ $returncode -eq 1 ]; then
-        dialog --ascii-lines --infobox "Cancel Selected - Function Aborted!"
+        dialog --ascii-lines --infobox "Cancel Selected - Function Aborted!" 5 60
 	MenuMain
 fi
 if [ $returncode -eq 0 ]; then
-        dialog --ascii-lines --infobox "P25 Updating P25 Parameters"
+        dialog --ascii-lines --infobox "P25 Updating P25 Parameters" 5 60
 fi
 
 Enable1=$(echo "$P25d" | sed -n '2p')
@@ -1631,6 +1635,7 @@ if [ "$NetHangTime" != "$d17" ]; then
         sudo sed -i '/^\[/h;G;/Network]/s/\(NetHangTime=\).*/\1'"$NetHangTime"'/m;P;d' /etc/p25gateway
 fi
 
+
 dialog --ascii-lines --infobox "P25 Data Write Complete " 10 30 ; sleep 1
 
 EditP25
@@ -1652,13 +1657,14 @@ function EditYSF(){
 #8
 
 #YSF Section
-y1=$(sed -nr "/^\[System Fusion\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-y2=$(sed -nr "/^\[System Fusion\]/ { :l /LowDeviation[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-y3=$(sed -nr "/^\[System Fusion\]/ { :l /TXHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-y4=$(sed -nr "/^\[System Fusion\]/ { :l /ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+y1=$(sed -nr "/^\[System Fusion\]/ { :l /^Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+y2=$(sed -nr "/^\[System Fusion\]/ { :l /^LowDeviation[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+y3=$(sed -nr "/^\[System Fusion\]/ { :l /^TXHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+y4=$(sed -nr "/^\[System Fusion\]/ { :l /^ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 #YSF Network Network
-y5=$(sed -nr "/^\[System Fusion Network\]/ { :l /Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
-y6=$(sed -nr "/^\[System Fusion Network\]/ { :l /ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+y5=$(sed -nr "/^\[System Fusion Network\]/ { :l /^Enable[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+
+y6=$(sed -nr "/^\[System Fusion Network\]/ { :l /^ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 
 #YSF Gateway 
 # General Section
@@ -1752,7 +1758,7 @@ ModeHang1=$(echo "$ysfd" | sed -n '5p')
 Enable2=$(echo "$ysfd" | sed -n '7p')
 ModeHang2=$(echo "$ysfd" | sed -n '8p')
 ## 9
-CallSign=$(echo "$ysfd" | sed -n '10p')
+Callsign=$(echo "$ysfd" | sed -n '10p')
 Suffix=$(echo "$ysfd" | sed -n '11p')
 WiresXPass=$(echo "$ysfd" | sed -n '12p')
 Id=$(echo "$ysfd" | sed -n '13p')
@@ -1805,14 +1811,14 @@ if [ "$ModeHang1" != "$y4" ]; then
 fi
 ##
 if [ "$Enable2" != "$y5" ]; then
-        sudo sed -i '/^\[/h;G;/System Fusion Network]/s/\(Enable=\).*/\1'"$Enable1"'/m;P;d' /etc/mmdvmhost
+        sudo sed -i '/^\[/h;G;/System Fusion Network]/s/\(Enable=\).*/\1'"$Enable2"'/m;P;d' /etc/mmdvmhost
 fi
 if [ "$ModeHang2" != "$y6" ]; then
-        sudo sed -i '/^\[/h;G;/System Fusion Network]/s/\(ModeHang2=\).*/\1'"$ModeHang2"'/m;P;d' /etc/mmdvmhost
+        sudo sed -i '/^\[/h;G;/System Fusion Network]/s/\(ModeHang=\).*/\1'"$ModeHang2"'/m;P;d' /etc/mmdvmhost
 fi
 ##
-if [ "$CallSign" != "$y7" ]; then
-        sudo sed -i '/^\[/h;G;/General]/s/\(CallSign=\).*/\1'"$CallSign"'/m;P;d' /etc/ysfgateway
+if [ "$Callsign" != "$y7" ]; then
+        sudo sed -i '/^\[/h;G;/General]/s/\(Callsign=\).*/\1'"$Callsign"'/m;P;d' /etc/ysfgateway
 fi
 if [ "$Suffix" != "$y8" ]; then
         sudo sed -i '/^\[/h;G;/General]/s/\(Suffix=\).*/\1'"$Suffix"'/m;P;d' /etc/ysfgateway
@@ -2034,7 +2040,8 @@ MenuMaint
 ################
 function EditNextion(){
 #10
-n1=$(sed -nr "/^\[Nextion\]/ { :l /Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+#ds1=$(sed -nr "/^\[D-Star]/ { :l /^ModeHang[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+n1=$(sed -nr "/^\[Nextion]/ { :l /^Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 n2=$(sed -nr "/^\[Nextion\]/ { :l /Brightness[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 n3=$(sed -nr "/^\[Nextion\]/ { :l /DisplayClock[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
 n4=$(sed -nr "/^\[Nextion\]/ { :l /UTC[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
@@ -2108,7 +2115,7 @@ if [ $returncode -eq 1 ]; then
 fi
 
 #Nextion
-Port=$(echo "$Next" | sed -n '2p')
+Port1=$(echo "$Next" | sed -n '2p')
 
 Brightness=$(echo "$Next" | sed -n '3p')
 DisplayClock=$(echo "$Next" | sed -n '4p')
@@ -2140,10 +2147,9 @@ WaitForLan=$(echo "$Next" | sed -n '25p')
 SleepWhenInactive=$(echo "$Next" | sed -n '25p')
 
 
-if [ "$Port" != "$n1" ]; then
-  FROM=$(echo "$n1" | sed "s/\//\\\\\//g")
-  TO=$(echo "$Port" | sed "s/\//\\\\\//g")
-  sed -i "/^\[Nextion\]/,/^$/s/^Port=$FROM/Port=$TO/" /etc/mmdvmhost
+if [ "$Port1" != "$n1" ]; then
+  TO=$(echo "$Port1" | sed "s/\//\\\\\//g")
+  sudo sed -i '/^\[/h;G;/Nextion]/s/\(^Port=\).*/\1'"$TO"'/m;P;d' /etc/mmdvmhost	
 fi
 
 if [ "$Brightness" != "$n2" ]; then
@@ -2164,7 +2170,6 @@ fi
 if [ "$TempInFahrenheit" != "$n7" ]; then
         sudo sed -i '/^\[/h;G;/Nextion]/s/\(DisplayTempInFahrenheit=\).*/\1'"$TempInFahrenheit"'/m;P;d' /etc/mmdvmhost
 fi
-sleep 1
 ## NextionDriver
 if [ "$Port" != "$nd1" ]; then
   FROM=$(echo "$nd1" | sed "s/\//\\\\\//g")
@@ -2174,7 +2179,6 @@ fi
 if [ "$SendDataMask" != "$nd2" ]; then
         sudo sed -i '/^\[/h;G;/NextionDriver]/s/\(SendUserDataMask=\).*/\1'"$SendDataMask"'/m;P;d' /etc/mmdvmhost
 fi
-sleep 1
 if [ "$DataFilesPath" != "$nd3" ]; then
   FROM=$(echo "$nd3" | sed "s/\//\\\\\//g")
   TO=$(echo "$DataFilesPath" | sed "s/\//\\\\\//g")
@@ -2435,5 +2439,4 @@ MenuMain
 #EditDMRGateNet 1
 #EditInfo
 #mmdvmhost.service restart
-
 
