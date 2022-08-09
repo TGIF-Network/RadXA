@@ -2390,13 +2390,89 @@ EditNextion
 
 function EditScreens(){
 #10
+
+#TFT
+tPort=$(sed -nr "/^\[TFT Serial\]/ { :l /^Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+tBrightness=$(sed -nr "/^\[TFT Serial\]/ { :l /^Brightness[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+##HD44780
+hRows=$(sed -nr "/^\[HD44780\]/ { :l /^Rows[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+hColumns=$(sed -nr "/^\[HD44780\]/ { :l /^Columns[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+hPins=$(sed -nr "/^\[HD44780\]/ { :l /^Pins[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+hI2CAddress=$(sed -nr "/^\[HD44780\]/ { :l /^I2CAddress[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+hPWM=$(sed -nr "/^\[HD44780\]/ { :l /^PWM[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+hPWMPin=$(sed -nr "/^\[HD44780\]/ { :l /^PWMPin[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+hPWMBright=$(sed -nr "/^\[HD44780\]/ { :l /^PWMBright[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+hPWMDim=$(sed -nr "/^\[HD44780\]/ { :l /^PWMDim[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+hDisplayClock=$(sed -nr "/^\[HD44780\]/ { :l /^DisplayClock[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+hUTC=$(sed -nr "/^\[HD44780\]/ { :l /^UTC[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+###OLED
+oType=$(sed -nr "/^\[OLED\]/ { :l /^Type[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+oBrightness=$(sed -nr "/^\[OLED\]/ { :l /^Brightness[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+oInvert=$(sed -nr "/^\[OLED\]/ { :l /^Invert[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+oScroll=$(sed -nr "/^\[OLED\]/ { :l /^Scroll[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+oRotate=$(sed -nr "/^\[OLED\]/ { :l /^Rotate[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+oCast=$(sed -nr "/^\[OLED\]/ { :l /^Cast[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+oLogoScreensaver=$(sed -nr "/^\[OLED\]/ { :l /^LogoScreensaver[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+##### LCDproc
+lAddress=$(sed -nr "/^\[LCDproc\]/ { :l /^Address[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+lPort=$(sed -nr "/^\[LCDproc\]/ { :l /^Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+lDimOnIdle=$(sed -nr "/^\[LCDproc\]/ { :l /^DimOnIdle[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+lDisplayClock=$(sed -nr "/^\[LCDproc\]/ { :l /^DisplayClock[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+lUTC=$(sed -nr "/^\[LCDproc\]/ { :l /^UTC[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/mmdvmhost)
+
+exec 3>&1
+
+
+  scrn=$(dialog  \
+        --title "Display Screen Sections - Non - Nextion " \
+        --ok-label "Submit" \
+        --backtitle "MMDVM Host Configurator - VE3RD" \
+        --ascii-lines \
+        --mixedform "Display Screens - Currently Read Only" 0 70 0 \
+        "TFT Serial"    	1 1 "TFT Serial"  	1 22 35 0 2 \
+        "Port"    		2 3 "$tPort"  		2 22 35 0 0 \
+        "Brightness"     	3 3 "$tBrightness"     	3 22 35 0 0 \
+        "HD44780"       	4 1 "HD44780"     	4 22 35 0 2 \
+        "Rows"      		5 3  "$hRows"     	5 22 35 0 0 \
+        "Columns"   		6 3 "$hColumns"     	6 22 35 0 0 \
+        "Pins"  		7 3 "$hPins"     	7 22 35 0 0 \
+        "I2CAddress"   		8 3 "$hI2CAddress"     	8 22 35 0 0 \
+        "PWM"  			9 3 "$hPWM"     	9 22 35 0 0 \
+        "PWMPin"  		10 3 "$hPWMPin"     	10 22 35 0 0 \
+        "PWMBright"   		11 3 "$hPWMBright"     	11 22 35 0 0 \
+        "PWMDim"  		12 3 "$hPWMDim"     	12 22 35 0 0 \
+        "DisplayClock"  	13 3 "$hDisplayClock"   13 22 35 0 0 \
+        "UTC"  			14 3 "$hUTC"     	14 22 35 0 0 \
+        "OLED"  		15 1 "OLED"     	15 22 35 0 2 \
+        "Type"  		16 3 "$oType"     	16 22 35 0 0 \
+        "Brightness"  		17 3 "$oBrightness"     17 22 35 0 0 \
+        "Invert"  		18 3 "$oInvert"     	18 22 35 0 0 \
+        "Scroll"  		19 3 "$oScroll"     	19 22 35 0 0 \
+        "Rotate"  		20 3 "$oRotate"     	20 22 35 0 0 \
+        "Cast"  		21 3 "$oCast"     	21 22 35 0 0 \
+        "LogoScreensaver"  	22 3 "$oLogoScreensaver"     	22 22 35 0 0 \
+        "LCDproc"  		23 1 "LCDproc"     	23 22 35 0 2 \
+        "Address"  		24 3 "$lAddress"     	24 22 35 0 0 \
+        "Port"  		25 3 "$lPort"     	25 22 35 0 0 \
+        "DimOnIdle"  		26 3 "$lDimOnIdle"     	26 22 35 0 0 \
+        "DisplayClock"  	27 3 "$lDisplayClock"   27 22 35 0 0 \
+        "UTC"  			28 3 "$lUTC"     	28 22 35 0 0 \
+	2>&1 1>&3 )
+
+errorcode=$?
+
+if [ $errorcode -eq 1 ]; then
+MenuMain
+fi
+
+
 dialog \
         --backtitle "MMDVM Host Configurator - VE3RD" \
 	--title " Edit Non Nextion Screens "  \
-	--ascii-lines --msgbox " This function not yet impemented" 13 50
+	--ascii-lines --msgbox " This function Under Construction" 13 50
 
 result=$?
-MenuMain
+EditScreens
 }
 ##########################
 function EditInfo(){
@@ -2483,7 +2559,7 @@ WIDTH=60
 CHOICE_HEIGHT=35
 BACKTITLE="MMDVM Host Configurator - VE3RD"
 TITLE="Main Menu"
-MENU="Choose one of the following options:"
+MENU="Choose one of the following options\n RO Read Only"
 
 
 CHOICE=$(dialog --clear \
@@ -2503,7 +2579,7 @@ CHOICE=$(dialog --clear \
          	7 "Edit NXDN Section" \
          	8 "Edit YSF Section" \
          	9 "Edit Nextion Sections" \
-        	10 "Edit Non Nextion Displays - NYA" \
+        	10 "Edit Non Nextion Displays - RO" \
         	11 "Edit TBA - NYA" \
         	12 "Edit Timers" \
         	13 "Edit DMRGateway" \
