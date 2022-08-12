@@ -26,12 +26,21 @@ export GWPage
 : ${DIALOG_ITEM_HELP=4}
 : ${DIALOG_ESC=255}
 
+sudo sed -i '/use_colors = /c\use_colors = ON' ~/.dialogrc
+sudo sed -i '/screen_color = /c\screen_color = (WHITE,BLUE,ON)' ~/.dialogrc
+sudo sed -i '/title_color = /c\title_color = (YELLOW,RED,ON)' ~/.dialogrc
+Mode="RO"
 CallSign=""
 DID=""
 
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 #printf "I ${RED}love${NC} Stack Overflow\n"
+
+mode=$1
+if [ -z "$mode" ]; then
+mode="RO"
+fi
 
 #########  Start of Functions  ################
 function exitcode
@@ -41,8 +50,262 @@ function exitcode
 	dialog --title "  Programmed Exit  " --ascii-lines --msgbox "$txt" 8 78
 	tput setab 9 mode="" clear echo -e '\e[1;40m' run="Done" 
 exit
-###################
+
 }
+########
+function SelectMode(){
+
+smode=$(dialog \
+        --ascii-lines \
+        --keep-tite \
+        --clear \
+        --stdout \
+        --title "Mode Selector" \
+        --radiolist "Select Mode $indx"  20 30 20 \
+        1 "D-Star" OFF \
+        2 "DMR" ON \
+        3 "YSF" OFF \
+        4 "NXDN" OFF \
+        5 "P25" OFF )
+
+exitcode=$?
+
+if [ $exitcode -eq 1 ]; then
+        exit
+fi
+F1=""
+F2=""
+F3=""
+case "$smode" in
+        1)      F1="/usr/local/etc/DPlus_Hosts.txt"
+                F2="/usr/local/etc/DExtra_Hosts.txt"
+                F3="/usr/local/etc/DCS_Hosts.txt"
+                modes="D-Star"
+        ;;
+        2) F1="/usr/local/etc/DMR_Hosts.txt" ; modes="DMR"
+        ;;
+        3) F1="/usr/local/etc/YSFHosts.txt"
+           F2="/usr/local/etc/FCSHosts.txt2"
+           modes="YSF"
+        ;;
+        4) F1="/usr/local/etc/NXDNHosts.txt"
+           F2="/usr/local/etc/NXDNHostsLocal.txt"
+           modes="NXDN"
+        ;;
+        5) F1="/usr/local/etc/P25Hosts.txt"
+           F2="/usr/local/etc/P25HostsLocal.txt"
+            modes="P25"
+        ;;
+esac
+
+if [ -z "$smode" ]; then
+  SelectMode
+fi
+
+SearchBox
+
+}
+
+function SearchBox(){
+sbox=$(dialog \
+        --ascii-lines \
+        --clear \
+        --stdout \
+        --title "Mode Selector" \
+        --inputbox "Enter $modes Search Text $indx"  20 30  )
+
+exitcode=$?
+
+if [ $exitcode -eq 1 ]; then
+        exit
+fi
+
+if [ -z "$sbox" ]; then
+  SearchBox
+fi
+
+#echo "Searching for $sbox in $F1"
+
+Svr=$(grep -E "$sbox" $F1 $F2 $F3 |sed -e '/^#.*/d' | tr -s "\t" | tr "\t" ";" | awk '{print $1, FNR, "N/A"}' | cut -d ":" -f2)
+
+echo "Test2 = $Svr"
+
+
+##Svr=$(echo "$Svr" | awk '{print $1, FNR, "off"}')
+
+
+choose
+
+}
+#Select master from a list of possible items
+function choose () {
+ options=$Svr
+  status=OFF
+
+cmd=$(dialog --title "Master Server Selector" \
+        --column-separator \
+        --keep-tite \
+        --stdout \
+        --colors \
+        --ascii-lines \
+      --radiolist "Select $modes Server:" 22 90 16 \
+        "${cmd[@]}" ${options})
+
+exitcode=$?
+
+if [ -z "$cmd" ]; then
+  exit
+fi
+
+if [ $exitcode -eq 1 ]; then
+
+  SelectMode
+fi
+if [ $exitcode -eq 255 ]; then
+  SelectMode
+fi
+
+echo "Selected = $cmd"
+Parse
+
+}
+
+
+## Check and parse out the selected Master
+function Parse () {
+      choice="$cmd"
+
+
+  if [ -z "$cmd" ]; then
+          dialog --ascii-lines --clear --title "Parse Function" --msgbox "No Selection Found" 3 70
+        exit
+
+  fi
+
+  echo "Choice = $choice   Mode = $smode    CMD: $cmd"
+
+     case "$smode" in
+        1) #D-STAR
+          SvrRoom=$(echo "$choice" | cut -d ";" -f1)
+          SvrAddr=$(echo "$choice" | cut -d ";" -f2)
+          dstr="MODE = $modes\nRoom: $SvrRoom \nAddress: $SvrAddr"
+        ;;
+        2) #DMR
+          SvrName=$(echo "$choice" | cut -d ";" -f1)
+          SvrAddr=$(echo "$choice" | cut -d ";" -f3)
+          SvrPwd=$(echo "$choice" | cut -d ";" -f4)
+          SvrPort=$(echo "$choice" | cut -d ";" -f5)
+          dstr="MODE = $modes\nName: $SvrName \nAddr: $SvrAddr\nPasswd: $SvrPwd \nPort: $SvrPort"
+        ;;
+        3) #YSF
+
+          SvrTG=$(echo "$choice" | cut -d ";" -f1)
+          SvrName=$(echo "$choice" | cut -d ";" -f3)
+          SvrAddress=$(echo "$choice" | cut -d ";" -f4)
+          SvrPort=$(echo "$choice" | cut -d ";" -f5)
+          dstr="MODE = $modes\nTG: $SvrTG \nName: $SvrName \nAddr: $SvrAddress \nPort: $SvrPort"
+        ;;
+        4) #NXDN
+          SvrTG=$(echo "$choice" | cut -d ";" -f1)
+          SvrAddr=$(echo "$choice" | cut -d ";" -f2)
+          SvrPort=$(echo "$choice" | cut -d ";" -f3)
+        dstr="MODE = $modes\nTG: $SvrTG \nAddr: $SvrAddr \nPort: $SvrPort"
+        ;;
+        5)      #P25
+          SvrTG=$(echo "$choice" | cut -f1)
+          SvrAddr=$(echo "$choice" | cut -f2)
+          SvrPort=$(echo "$choice" | cut -f3)
+        dstr="MODE = $modes\nTG: $SvrTG \nAddr: $SvrAddr \nPort: $SvrPort"
+
+        ;;
+     esac
+ dialog --ascii-lines --clear --title "Selected $modes Server Detail" --msgbox "$dstr" 10 70
+
+
+clear
+MenuMain
+}
+
+
+
+function MasterServ(){
+
+exec 3>&1
+
+SrcTxt=$(dialog  --ascii-lines \
+        --backtitle "MMDVM Host Configurator - VE3RD" \
+        --title "  Search for a Master Server Step 1 " \
+        --inputbox "Enter your Search Text" 8 40 \
+	2>&1 1>&3 )
+
+SrcTxt=^$SrcTxt
+echo "Search For $SrcTxt"
+
+#tcmd=$(grep $SrcTxt /usr/local/etc/DMR_Hosts.txt |sed 's|[\t][\t][\t]*||g' | tr "\t" "|" )
+tcmd=$(grep "$SrcTxt" /usr/local/etc/DMR_Hosts.txt | tr -s "\t" | tr "\t" "|")
+
+COUNTER=1
+RADIOLIST=""  # variable where we will keep the list entries for radiolist dialog
+for i in "$tcmd"; do
+    RADIOLIST="$COUNTER $i off"
+    let COUNTER=COUNTER+1
+done
+
+echo "$RADIOLIST"
+
+SvrStr=$(dialog \
+	--ascii-lines \
+        --backtitle "MMDVM Host Configurator - VE3RD" \
+        --title "  DMR Master Sever List " \
+	--menu "Select the DMR Master Server" 20 70 10 0 \
+	$RADIOLIST \
+ 	2>&1 1>&3 )
+
+
+ exitcode=$?
+
+if [ $errorcode -eq 1 ]; then
+    MenuMain
+fi
+if [ $errorcode -eq 255 ]; then
+    MenuMain
+fi
+if [ $errorcode -ne 0 ]; then
+   exit
+    MenuMain
+fi
+
+
+
+#echo "$SvrStr"
+SvrName=$(echo "$SvrStr" | cut -d "|" -f1)
+SvrAddr=$(echo "$SvrStr" | cut -d "|" -f3)
+SvrPassw=$(echo "$SvrStr" | cut -d "|" -f4)
+SvrPort=$(echo "$SvrStr" | cut -d "|" -f5)
+echo "$SvrName"
+echo "$SvrAddr"
+echo "$SvrPassw"
+echo "$SvrPort"
+exit
+
+#dialog --ascii-lines --infobox "Server Name = $SvrName\nServer Address = $SvrAddr\nPassword = $SvrPassw\Port = $SvrPort\" 10 60 ; sleep 2
+dialog --ascii-lines \
+        --backtitle "MMDVM Host Configurator - VE3RD" \
+        --title " Details of Selected DMR Master Server " \
+	--msgbox "Server Name = $SvrName\nServer Address = $SvrAddr\nPassword = $SvrPassw\nPort = $SvrPort" 10 60 
+ errorcode=$?
+
+if [ $errorcode -eq 1 ]; then
+    MenuMain
+fi
+if [ $errorcode -eq 255 ]; then
+    MenuMain
+fi
+
+MasterServ
+
+}
+
 function Services(){
 MMDVM=$(pgrep MMDVMHost)
 DMRG=$(pgrep DMRGateway)
@@ -79,7 +342,6 @@ fi
 
 
 MenuMaint
-exit
 }
 
 
@@ -128,6 +390,9 @@ if [ $errorcode -eq 1 ]; then
 	MenuMain
 fi
 if [ $errorcode -eq 255 ]; then
+	MenuMain
+fi
+if [ $mode == "RO" ]; then
 	MenuMain
 fi
 
@@ -334,6 +599,9 @@ fi
 if [ $errorcode -eq 255 ]; then
 MenuMain
 fi
+if [ $mode == "RO" ]; then
+	MenuMain
+fi
 
 
 ## 1
@@ -473,7 +741,7 @@ dm5a=$(sed -nr "/^\[$sect]/ { :l /^Password[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;
 dm6a=$(sed -nr "/^\[$sect]/ { :l /^Port[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 dm7a=$(sed -nr "/^\[$sect]/ { :l /^Local[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 dm8a=$(sed -nr "/^\[$sect]/ { :l /^TGRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
-dm9a=$(sed -nr "/^\[$sect1]/ { :l /^TGRewrite1[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
+dm9a=$(sed -nr "/^\[$sect]/ { :l /^TGRewrite1[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 dm10a=$(sed -nr "/^\[$sect]/ { :l /^PCRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 dm11a=$(sed -nr "/^\[$sect]/ { :l /^SrcRewrite0[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
 
@@ -501,7 +769,7 @@ exec 3>&1
 	"TGRewrite1" 	12 1 	"$dm9a" 	12 15 35 0 0 \
 	"PCRewrite0" 	13 1 	"$dm10a" 	13 15 35 0 0 \
 	"SrcRewrite0" 	14 1 	"$dm11a" 	14 15 35 0 0 \
-	2>&1 1>&3 )
+ 	2>&1 1>&3 )
 
 errorcode=$?
 
@@ -510,7 +778,8 @@ MenuMain
 fi
 
 if [ $errorcode -eq 3 ]; then
-	EditTimers       
+        ((N=$N+1))
+	EditDMRNet "$N"     
 fi
 
 if [ $errorcode -eq 0 ] ; then
@@ -532,6 +801,9 @@ fi
 
 if [ "$Jump" -gt 0 ] && [ "$Jump" -lt 7 ]; then
 	EditDMRGateNet "$Jump"
+fi
+if [ $mode == "RO" ]; then
+	EditDMRGateNet "$N"
 fi
 
 
@@ -698,6 +970,8 @@ if [ $errorcode -eq 1 ]; then
         EditDMRGate
 fi
 
+
+
 if [ $errorcode -eq 3 ]; then
 	((GWPage++))
 	if (( $GWPage >= 4 )); then
@@ -709,8 +983,13 @@ if [ $errorcode -eq 3 ]; then
 fi 
 
 if [ $errorcode -eq 255 ]; then
-MenuMain
+	EditDMRGate23
 fi
+
+if [ $mode == "RO" ]; then
+	EditDMRGate23
+fi
+
 
 ############  Net 1/4
 echo Starting Net A"
@@ -924,11 +1203,11 @@ EditDMRGate23
 ####################
 
 function EditDMRGate(){
-((GWPage=1))
+((GWPage=0))
 elabel="Net 123"
 
-EditDMRGateNet 1
-exit
+#EditDMRGateNet 1
+#exit
 
 
 g1=$(sed -nr "/^\[General\]/ { :l /^RuleTrace[ ]*=/ { s/.*=[ ]*//; p; q;}; n; b l;}" /etc/dmrgateway)
@@ -995,13 +1274,17 @@ if [ $errorcode -eq 1 ]; then
 fi
 
 if [ $errorcode -eq 3 ]; then
-	((GWPage++))
-	EditDMRGate23
+	GWPage=0
+	EditDMRGateNet 1
 fi
 
 if [ $errorcode -eq 255 ]; then
-MenuMain
+	MenuMain
 fi
+if [ $mode == "RO" ]; then
+	EditDMRGate
+fi
+
 
 RuleTrace=$(echo "$dmrg1" | sed -n '2p' )
 StartNet=$(echo "$dmrg1"  | sed -n '3p' )
@@ -1125,6 +1408,10 @@ if [ $errorcode -eq 255 ]; then
    dialog --ascii-lines --infobox "ESC Button Pressed - Sleeping 2 seconds" 10 40 ; sleep 2
 	MenuMain
 fi
+if [ $mode == "RO" ]; then
+	MenuMain
+fi
+
 
 DisplayLevel=$(echo "$Logd" | sed -n '1p' )
 FileLevel=$(echo "$Logd"  | sed -n '2p' )
@@ -1417,7 +1704,10 @@ if [ $returncode -eq 255 ]; then
 	MenuMain
 fi
 
+if [ "$mode" == "RO" ]; then
+ MenuMain
 
+fi
 
 Enable=$(echo "$DMRs" | sed -n '2p' )
 CallHang=$(echo "$DMRs" | sed -n '3p' )
@@ -2505,10 +2795,18 @@ Infod=$(dialog  --ascii-lines \
 returncode=$?
 
 
-if [ "$returncode" -eq 1 ]; then
+if [ $returncode -eq 1 ]; then
         dialog --ascii-lines --infobox "No Data - Function Aborted\nSleeping 2 seconds" 10 30 ; sleep 2
         MenuMain
 fi
+
+if [ $mode == "RO" ]; then
+	MenuMain
+fi
+
+
+
+
 Description=$(echo "$Infod" | sed -n '6p')
 exec 3>&-
 
@@ -2558,7 +2856,7 @@ HEIGHT=25
 WIDTH=60
 CHOICE_HEIGHT=35
 BACKTITLE="MMDVM Host Configurator - VE3RD"
-TITLE="Main Menu"
+TITLE="Main Menu Mode=$mode"
 MENU="Choose one of the following options\n RO Read Only"
 
 
@@ -2585,7 +2883,8 @@ CHOICE=$(dialog --clear \
         	13 "Edit DMRGateway" \
         	14 "Maintenance & Backup/Restore" \
         	15 "Check - Set Modes and Enables" \
-        	16 "Start Test Funtion" 2>&1 )
+        	16 "Set Master All Modes" \
+        	17 "Start Test Funtion" 2>&1 )
 #>/dev/tty)
 
 #       "${OPTIONS[@]}" )
@@ -2605,6 +2904,7 @@ if [ $exitcode -eq 1 ]; then
          exit
    
 fi
+
 
 if [ -z "$CHOICE" ]; then
         dialog --ascii-lines --infobox "Choice Box Empty - Exiting Script\nSleeping 2 seconds" 5 40 ; sleep 2
@@ -2628,7 +2928,8 @@ case $CHOICE in
         13) EditDMRGate ;;
         14) MenuMaint ;;
         15) CheckSetModes ;;
-        16) EditDMRGateNet 1 ;;
+        16) SelectMode ;;
+        17) MasterServ ;;
 esac
 
 
@@ -2665,6 +2966,29 @@ done < tmpfile
 
 ##########################    Start of Main Program #########
 echo "Staring Script"
+
+if [ ! -d /etc/backups ]; then
+ sudo mount -o remount,rw / > /dev/null
+
+  mkdir /etc/backups
+  dates=$(date +%F)
+  cp /etc/mmdvmhost /etc/backups/mmdvmhost"-$dates"
+  cp /etc/ysfgateway /etc/backups/ysfgateway"-$dates"
+  cp /etc/nxdngateway /etc/backups/nxdngateway"-$dates"
+  cp /etc/p25gateway /etc/backups/p25gateway"-$dates"
+  cp /etc/dmrgateway /etc/backups/dmrgateway"-$dates"
+sudo mount -o remount,ro / > /dev/null
+fi
+
+
+if [ "$mode" == "RW" ]; then
+sudo mount -o remount,rw / > /dev/null
+else
+sudo mount -o remount,ro / > /dev/null
+fi
+
+
+
 MenuMain
 #EditDMRGateNet 1
 #EditInfo
