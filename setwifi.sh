@@ -100,9 +100,10 @@ status=$?
 return
 }
 
+#   Start of Main Program
 
 if [ -d /home/rock ]; then
-	CreateStartWifi(){
+	CreateStartWiFi
 else
-	CreateStartWiFI
+	CreateWPA_S
 fi
